@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
+import { CounterColor } from './models/counter-color';
+import { Game } from './models/game';
+import { CurrentGameService } from './services/current-game.service';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +10,14 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'get-to-the-end';
+
+  @HostListener('click', ['$event.target'])
+  onClick(target:any) {
+    console.log("clicked");
+    this.currentGame.moveCounterByAmount(CounterColor.green, 1);
+  }
+
+  constructor(private currentGame: CurrentGameService) {
+    currentGame.currentGame = new Game();
+  }
 }

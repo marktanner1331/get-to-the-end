@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000">
+    <rect x="3" y="3" width="994" height="994" stroke="black" stroke-width="6" fill="none" />
+    
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="100" x2="100" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="200" x2="200" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="300" x2="300" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="400" x2="400" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="500" x2="500" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="600" x2="600" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="700" x2="700" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="800" x2="800" />
+    <line y1="0" y2="1000" style="stroke: black; stroke-width: 1;" x1="900" x2="900" />
+
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="100" y2="100" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="200" y2="200" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="300" y2="300" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="400" y2="400" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="500" y2="500" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="600" y2="600" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="700" y2="700" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="800" y2="800" />
+    <line x1="0" x2="1000" style="stroke: black; stroke-width: 1;" y1="900" y2="900" />
+
+    <line x1="100" x2="1000" style="stroke: black; stroke-width: 6;" y1="100" y2="100" />
+    <line x1="0" x2="900" style="stroke: black; stroke-width: 6;" y1="200" y2="200" />
+    <line x1="100" x2="1000" style="stroke: black; stroke-width: 6;" y1="300" y2="300" />
+    <line x1="0" x2="900" style="stroke: black; stroke-width: 6;" y1="400" y2="400" />
+    <line x1="100" x2="1000" style="stroke: black; stroke-width: 6;" y1="500" y2="500" />
+    <line x1="0" x2="900" style="stroke: black; stroke-width: 6;" y1="600" y2="600" />
+    <line x1="100" x2="1000" style="stroke: black; stroke-width: 6;" y1="700" y2="700" />
+    <line x1="0" x2="900" style="stroke: black; stroke-width: 6;" y1="800" y2="800" />
+    <line x1="100" x2="1000" style="stroke: black; stroke-width: 6;" y1="900" y2="900" />
+</svg>
