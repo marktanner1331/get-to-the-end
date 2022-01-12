@@ -1,0 +1,14 @@
+:host {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+app-board {
+    flex-basis: fit-content;
+}
+
+app-control-panel {
+    width: 300px;
+}

@@ -1,6 +1,9 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { interval, timer } from 'rxjs';
+import { CounterColor } from '../models/counter-color';
+import { GameCommand, GameCommandType } from '../models/game-command';
+import { CurrentGameService } from '../services/current-game.service';
 import { ResizeService } from '../services/resize.service';
-import { BoardService } from './board.service';
 
 @Component({
   selector: 'app-board',
@@ -15,12 +18,16 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
   greenCounterPos = 0;
   yellowCounterPos = 0;
 
-  constructor(boardService: BoardService, private el: ElementRef, private resizeService: ResizeService) {
-    boardService.boardComponent = this;
+  constructor(private el: ElementRef, private resizeService: ResizeService, private currentGameService: CurrentGameService) {
+    currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
   ngAfterViewInit(): void {
     this.resetCounterPositions();
+
+    setTimeout(() => {
+      this.currentGameService.startGame();
+    }, 100);
   }
 
   ngOnInit() {
@@ -31,6 +38,49 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy() {
     this.resizeService.removeResizeEventListener(this.el.nativeElement);
+  }
+
+  processCommand(command: GameCommand) {
+    if (command.type == GameCommandType.ROLLED || command.type == GameCommandType.MOVE_COUNTER) {
+      this.currentGameService.processCommand(new GameCommand(
+        GameCommandType.MOVING,
+        this.currentGameService.currentGame.currentTurnColor,
+        null
+      ));
+
+      let newGreen = this.currentGameService.currentGame.getPositionOfPlayer(CounterColor.green);
+      let newYellow = this.currentGameService.currentGame.getPositionOfPlayer(CounterColor.yellow);
+
+      let greenDelta = newGreen - this.greenCounterPos > 0 ? 1 : -1;
+      let yellowDelta = newYellow - this.yellowCounterPos > 0 ? 1 : -1;
+
+      let timer = interval(100);
+      let subscription = timer.subscribe(() => {
+          let needsReset = false;
+
+          if (this.greenCounterPos != newGreen) {
+            this.greenCounterPos += greenDelta;
+            needsReset = true;
+          }
+
+          if (this.yellowCounterPos != newYellow) {
+            this.yellowCounterPos += yellowDelta;
+            needsReset = true;
+          }
+
+          if (needsReset) {
+            this.resetCounterPositions();
+          } else {
+            subscription.unsubscribe();
+            this.currentGameService.processCommand(new GameCommand(
+              GameCommandType.MOVED,
+              this.currentGameService.currentGame.currentTurnColor,
+              null
+            ));
+          }
+        });
+    }
+
   }
 
   resetCounterPositions() {
@@ -63,7 +113,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
       let row = Math.floor(flipped / 10);
 
       let column = flipped % 10;
-      if((row % 2) == 0) {
+      if ((row % 2) == 0) {
         column = 9 - column;
       }
 

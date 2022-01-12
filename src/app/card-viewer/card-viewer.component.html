@@ -1,0 +1,11 @@
+<ng-container *ngIf="display">
+    <div id="blocker"></div>
+    <div id="card">
+        <div id="title">{{title}}</div>
+        <div id="descriptionHolder">
+            <div id="description">{{description}}</div>
+            <button class="button" (click)="useNow()">Use Now</button>
+            <button class="button" (click)="saveForLater()">Save</button>
+        </div>
+    </div>
+</ng-container>

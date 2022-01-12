@@ -1,0 +1,15 @@
+<div *ngIf="currentGameService.isOurTurn()" id="header">
+    <span>Our Turn</span>
+    <img #greenCounter class="counter" src="{{getCounterPath(currentGameService.getOurColor())}}" />
+</div>
+<div *ngIf="!currentGameService.isOurTurn()" id="header">
+    <span>Opponents Turn</span>
+    <img #greenCounter class="counter" src="{{getCounterPath(currentGameService.getTheirColor())}}" />
+</div>
+<div id="buttonContainer">
+    <button class="button" (click)="viewSavedCards()" [disabled]="!canViewSavedCards">View Saved Cards</button>
+    <button class="button" (click)="roll()" [disabled]="!canRoll">Roll</button>
+    <button class="button" (click)="drawCard()" [disabled]="!canDraw">Draw Card</button>
+    <button class="button" (click)="endTurn()" *ngIf="canEndTurn">End Turn</button>
+</div>
+<app-dice-roller></app-dice-roller>

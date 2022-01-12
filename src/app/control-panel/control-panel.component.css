@@ -1,0 +1,30 @@
+#header {
+    display: flex;
+    align-items: center;
+    font-size: 200%;
+    font-weight: bold;
+}
+
+#header>span {
+    margin: 0 auto;
+}
+
+.counter {
+    width: 50px;
+}
+
+#buttonContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+#buttonContainer>button {
+    width: 80%;
+    margin-bottom: 5px;
+}
+
+app-dice-roller {
+    margin-top: 10px;
+}

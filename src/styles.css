@@ -10,3 +10,27 @@ body {
     box-sizing: border-box;
     overflow: hidden;
 }
+
+.button {
+    display: block;
+    text-align: center;
+    border: 1px solid black;
+    max-width: 300px;
+    border-radius: 10px;
+    padding: 10px;
+    text-decoration: none;
+    color: white;
+    background-color: #4683c1;
+    cursor: pointer;
+    user-select: none;
+}
+
+.button:hover {
+    background-color: #4080bf;
+}
+
+.button:disabled {
+    background-color: #bababa;
+    color: black;
+    cursor: default;
+}

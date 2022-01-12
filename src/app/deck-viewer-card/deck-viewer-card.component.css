@@ -1,0 +1,36 @@
+:host {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: white;
+    border: 2px solid black;
+}
+
+#title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+    color: white;
+    background-color: #4683c1;
+}
+
+#descriptionHolder {
+    padding: 10px;
+}
+
+#description {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+button {
+    width: 90%;
+    margin: auto;
+}
+
+button:first-of-type {
+    margin-bottom: 5px;
+}

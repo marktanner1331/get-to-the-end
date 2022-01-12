@@ -1,0 +1,41 @@
+:host {
+    display: flex;
+    justify-content: center;
+}
+
+div {
+    width: 70px;
+    height: 70px;
+    display: block;
+    background-size: cover;
+    background-image: var(--img0);
+    background-repeat: no-repeat;
+    padding: 5px;
+    border: 2px solid transparent;
+}
+
+.rolling {
+    animation: changeBg 1s infinite;
+}
+
+@keyframes changeBg {
+    0%,
+    100% {
+        background-image: var(--img1);
+    }
+    17% {
+        background-image: var(--img2);
+    }
+    33% {
+        background-image: var(--img3);
+    }
+    50% {
+        background-image: var(--img4);
+    }
+    67% {
+        background-image: var(--img5);
+    }
+    83% {
+        background-image: var(--img6);
+    }
+}
