@@ -1,3 +1,4 @@
+import { PACKAGE_ROOT_URL } from "@angular/core";
 import * as _ from "lodash";
 import { CounterColor, flipColor } from "./counter-color";
 import { CardType, Deck } from "./deck";
@@ -6,44 +7,51 @@ import { Player } from "./player";
 import { TurnPhase } from "./TurnPhase";
 
 export class Game {
+
     players: Map<CounterColor, Player> = new Map();
     currentTurnColor: CounterColor = CounterColor.green;
     currentPhase: TurnPhase = TurnPhase.preroll;
     currentDrawnCard?: CardType;
 
-    //when set to true, phase processing will not occur during processCommand calls
-    //this is useful for cards that have complex effects, and need to manage the phase themselves
-    suspendPhaseProcessing: boolean = false;
+    constructor() {
+    }
 
     processCommand(command: GameCommand) {
         switch (command.type) {
             case GameCommandType.MOVE_COUNTER:
-                this.players.get(command.counterColor)!.position = (command.data as number);
+                this.players.get(command.data.color)!.position = (command.data.position as number);
                 break;
             case GameCommandType.DRAW_CARD:
                 let temp = this.players.get(this.currentTurnColor)!.deck.removeTopCard();
-                if(temp != command.data) {
-                    throw new Error("cards do not match");
-                }
-
-                this.currentDrawnCard = command.data;
+                this.currentDrawnCard = temp;
                 this.changePhase(TurnPhase.drawn);
                 break;
             case GameCommandType.ROLLED:
                 {
                     this.changePhase(TurnPhase.predraw);
-                    let player = this.players.get(command.counterColor)!;
+                    let player = this.players.get(this.currentTurnColor)!;
                     player.position = Math.min(99, player.position + (command.data as number));
                 }
                 break;
-            case GameCommandType.USE_CARD:
-                Deck.getCardFunction(command.data)();
-                this.players.get(command.counterColor)!
+            case GameCommandType.USE_SAVED_CARD:
+                {
+                    let player = this.players.get(this.currentTurnColor)!;
+                    player.savedCards.removeFirstCardOfType(command.data);
+                }
+                break;
+            case GameCommandType.USE_DRAWN_CARD:
+                this.players.get(this.currentTurnColor)!
                     .discardedCards.putCardOnTop(command.data);
+
+                this.currentDrawnCard = undefined;
                 break;
             case GameCommandType.SAVE_CARD:
-                this.players.get(command.counterColor)!
+                this.players.get(this.currentTurnColor)!
                     .savedCards.putCardOnTop(command.data);
+
+                if (this.currentPhase == TurnPhase.drawn) {
+                    this.currentDrawnCard = undefined;
+                }
                 break;
             case GameCommandType.END_TURN:
                 this.changePhase(TurnPhase.end);
@@ -59,9 +67,7 @@ export class Game {
     }
 
     changePhase(newPhase: TurnPhase) {
-        if(!this.suspendPhaseProcessing) {
-            this.currentPhase = newPhase;
-        }
+        this.currentPhase = newPhase;
     }
 
     isComplete(): boolean {

@@ -17,47 +17,32 @@ export class ControlPanelComponent implements OnInit {
   canEndTurn: boolean = false;
 
   constructor(public currentGameService: CurrentGameService) {
-    currentGameService.command.subscribe(x => this.processCommand(x));
+    currentGameService.idle.subscribe(() => this.refresh());
+    //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
   ngOnInit(): void {
   }
 
-  processCommand(command: GameCommand) {
+  refresh() {
+    this.canRoll = false;
+    this.canDraw = false;
+    this.canViewSavedCards = false;
+    this.canEndTurn = false;
+
     if (!this.currentGameService.isOurTurn()) {
       return;
     }
 
-    switch (command.type) {
-      case GameCommandType.START_TURN:
-      case GameCommandType.START_GAME:
-        this.canRoll = true;
-        let hasSaved = this.currentGameService.getCurrentPlayer().savedCards.length > 0;
-        this.canViewSavedCards = hasSaved;
-        break;
-      case GameCommandType.ROLLING:
-        this.canRoll = false;
-        this.canViewSavedCards = false;
-        break;
-      case GameCommandType.ROLLED:
-      case GameCommandType.MOVED:
-        {
-          let hasDeck = this.currentGameService.getCurrentPlayer().deck.length > 0;
-          this.canDraw = hasDeck;
-          this.canEndTurn = !hasDeck;
-        }
-        break;
-      case GameCommandType.MOVING:
-        this.canDraw = false;
-        break;
-      case GameCommandType.END_TURN:
-        {
-          this.canViewSavedCards = false;
-          this.canRoll = false;
-          this.canDraw = false;
-          this.canEndTurn = false;
-        }
-        break;
+    let phase = this.currentGameService.currentGame.currentPhase;
+    if(phase == TurnPhase.preroll) {
+      this.canRoll = true;
+      let hasSaved = this.currentGameService.getCurrentPlayer().savedCards.length > 0;
+      this.canViewSavedCards = hasSaved;
+    } else if(phase == TurnPhase.predraw) {
+      let hasDeck = this.currentGameService.getCurrentPlayer().deck.length > 0;
+      this.canDraw = hasDeck;
+      this.canEndTurn = !hasDeck;
     }
   }
 
@@ -66,6 +51,7 @@ export class ControlPanelComponent implements OnInit {
   }
 
   roll() {
+    //todo: hide roll button
     this.currentGameService.roll();
   }
 

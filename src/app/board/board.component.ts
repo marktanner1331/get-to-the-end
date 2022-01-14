@@ -19,7 +19,8 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
   yellowCounterPos = 0;
 
   constructor(private el: ElementRef, private resizeService: ResizeService, private currentGameService: CurrentGameService) {
-    currentGameService.command.subscribe(x => this.processCommand(x));
+    currentGameService.command.push(x => this.processCommand(x));
+    //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
   ngAfterViewInit(): void {
@@ -44,8 +45,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
     if (command.type == GameCommandType.ROLLED || command.type == GameCommandType.MOVE_COUNTER) {
       this.currentGameService.processCommand(new GameCommand(
         GameCommandType.MOVING,
-        this.currentGameService.currentGame.currentTurnColor,
-        null
+        this.currentGameService.currentGame.currentTurnColor
       ));
 
       let newGreen = this.currentGameService.currentGame.getPositionOfPlayer(CounterColor.green);
@@ -74,8 +74,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
             subscription.unsubscribe();
             this.currentGameService.processCommand(new GameCommand(
               GameCommandType.MOVED,
-              this.currentGameService.currentGame.currentTurnColor,
-              null
+              this.currentGameService.currentGame.currentTurnColor
             ));
           }
         });

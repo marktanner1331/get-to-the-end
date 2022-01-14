@@ -17,13 +17,16 @@ export class CardViewerComponent implements OnInit {
   display: boolean = false;
 
   constructor(private currentGameService: CurrentGameService) {
-    currentGameService.command.subscribe(x => this.processCommand(x));
+    currentGameService.command.push(x => this.processCommand(x));
+    //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
   processCommand(command: GameCommand) {
     switch(command.type) {
-      case GameCommandType.DRAW_CARD:
-        this.viewCard(command.data);
+      case GameCommandType.CARD_DRAWN:
+        if(this.currentGameService.isOurTurn()) {
+          this.viewCard(command.data);
+        }
         break;
     }
   }
@@ -49,7 +52,7 @@ export class CardViewerComponent implements OnInit {
   }
 
   useNow() {
-    this.currentGameService.useDrawnCard(this.cardType!);
+    this.currentGameService.useDrawnCard();
     this.close();
   }
 

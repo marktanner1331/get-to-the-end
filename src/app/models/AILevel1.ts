@@ -5,26 +5,37 @@ import { Player } from "./player";
 import { TurnPhase } from "./TurnPhase";
 
 export class AILevel1 {
-    processCommand(command: GameCommand) {
+    init() {
+        AppInjector.get(CurrentGameService).idle.subscribe(() => this.refresh());
+    }
+
+    refresh() {
         let gameService = AppInjector.get(CurrentGameService);
-        switch(command.type) {
-            case GameCommandType.START_TURN:
-                gameService.roll();
-                break;
-            case GameCommandType.MOVED:
-                if(gameService.currentGame.currentPhase == TurnPhase.predraw) {
-                    setTimeout(() => {
-                        let player: Player = gameService.getCurrentPlayer();
-                        if(player.deck.length > 0) {
-                            gameService.currentGame.currentDrawnCard = player.deck.removeTopCard();
-                            gameService.currentGame.currentPhase = TurnPhase.drawn;
-                            gameService.useDrawnCard(gameService.currentGame.currentDrawnCard);
-                        } else {
-                            gameService.endTurn();
-                        }
-                    }, 300);
-                }
-                break;
+
+        //'our' refers to the real player
+        //todo: rename it to something more description
+        if (gameService.isOurTurn()) {
+            return;
+        }
+
+        let phase = gameService.currentGame.currentPhase;
+
+        if (phase == TurnPhase.preroll) {
+            console.log("ai rolling");
+            gameService.roll();
+        } else if (phase == TurnPhase.predraw) {
+            let hasDeck = gameService.getCurrentPlayer().deck.length > 0;
+
+            if (hasDeck) {
+                console.log("ai drawing card");
+                gameService.drawCard();
+            } else {
+                console.log("ai ending turn");
+                gameService.endTurn();
+            }
+        } else if (phase == TurnPhase.drawn) {
+            console.log("ai using drawn card");
+            gameService.useDrawnCard();
         }
     }
 }

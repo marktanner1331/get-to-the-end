@@ -1,6 +1,3 @@
-board
-    animate movements
-
 homepage
     single player button
 

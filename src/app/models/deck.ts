@@ -2,7 +2,8 @@ import { AppInjector } from "../app.module";
 import { CurrentGameService } from "../services/current-game.service";
 import * as _ from 'lodash';
 import { flipColor } from "./counter-color";
-import { GameCommandType } from "./game-command";
+import { GameCommand, GameCommandType } from "./game-command";
+import { TurnPhase } from "./TurnPhase";
 
 export class Deck {
     cards: CardType[];
@@ -34,8 +35,8 @@ export class Deck {
     }
 
     peekTopCard(): CardType {
-        return this.cards[this.cards.length -1];
-      }
+        return this.cards[this.cards.length - 1];
+    }
 
     removeTopCard(): CardType {
         return this.cards.pop()!;
@@ -166,7 +167,8 @@ class Cards {
             "swap active cards",
             "remove opponents active cards",
             "untrap - removes first trap that is triggered",
-            "one way only - when placed on a square, we cannot be moved backwards past this point, (except for by teleportation"
+            "one way only - when placed on a square, we cannot be moved backwards past this point, (except for by teleportation",
+            "swap positions"
         ];
 
         return cards;
@@ -174,33 +176,28 @@ class Cards {
 
     static draw2() {
         let currentGameService = AppInjector.get(CurrentGameService);
+        let numCardsDrawn = 0;
 
-        //maybe have a custom command processor
-        //that returns a boolean
-        //if true, it means that the command was processed
-        //and the games processCommand() should quit
-        //something like:
-        //currentGameService.customCommandProcessor = (command) => {
-        // return true;
-        //};
-        //we will have to do this regardless
-        //as what if we have two 'draw 2' cards
-        //we will be drawing 4
-        //but simply listening to game events and keeping a count won't cut it
-        //but a custom command processor will
-        //as it check if there is already a processor in place
-        //and save it locally, before restoring it at the end of the cards function
-
-        let subscription = currentGameService.command.subscribe(x => {
-            switch(x.type) {
-                case GameCommandType.USE_CARD:
-
+        let callback = (command: GameCommand) => {
+            switch (command.type) {
+                case GameCommandType.CARD_USED:
+                case GameCommandType.SAVE_CARD:
+                    numCardsDrawn++;
+                    
+                    if(numCardsDrawn == 2) {
+                        currentGameService.currentGame.changePhase(TurnPhase.drawn);
+                        _.remove(currentGameService.command, x => x == callback);
+                        currentGameService.cardUsed();
+                    } else {
+                        currentGameService.currentGame.changePhase(TurnPhase.predraw);
+                    }
+                    break;
             }
-        });
-        currentGameService.drawCard();
+        };
 
-        subscription.unsubscribe();
-        currentGameService.cardUsed();
+        currentGameService.command.push(callback);
+
+        currentGameService.currentGame.changePhase(TurnPhase.predraw);
     }
 
     static nothing() {
@@ -210,23 +207,31 @@ class Cards {
 
     static moveThem(amount: number) {
         let currentGameService = AppInjector.get(CurrentGameService);
-        currentGameService.moveCounterByAmount(flipColor(currentGameService.currentGame.currentTurnColor), amount);
 
-        currentGameService.command.subscribe(x => {
-            if (x.type == GameCommandType.MOVED) {
+        let callback = (command: GameCommand) => {
+            if (command.type == GameCommandType.MOVED) {
+                _.remove(currentGameService.command, x => x == callback);
                 currentGameService.cardUsed();
             }
-        });
+        };
+
+        currentGameService.command.push(callback);
+
+        currentGameService.moveCounterByAmount(flipColor(currentGameService.currentGame.currentTurnColor), amount);
     }
 
     static moveUs(amount: number) {
         let currentGameService = AppInjector.get(CurrentGameService);
-        currentGameService.moveCounterByAmount(currentGameService.currentGame.currentTurnColor, amount);
 
-        currentGameService.command.subscribe(x => {
-            if (x.type == GameCommandType.MOVED) {
+        let callback = (command: GameCommand) => {
+            if (command.type == GameCommandType.MOVED) {
+                _.remove(currentGameService.command, x => x == callback);
                 currentGameService.cardUsed();
             }
-        });
+        };
+
+        currentGameService.command.push(callback);
+
+        currentGameService.moveCounterByAmount(currentGameService.currentGame.currentTurnColor, amount);
     }
 }
