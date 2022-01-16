@@ -1,0 +1,10 @@
+<ng-container *ngIf="display">
+    <div id="blocker"></div>
+    <div id="box">
+        <div id="title">Game Over</div>
+        <div id="descriptionHolder">
+            <div id="description">{{description}}</div>
+            <button class="button" (click)="ok()">Ok</button>
+        </div>
+    </div>
+</ng-container>

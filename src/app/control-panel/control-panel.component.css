@@ -34,6 +34,11 @@ app-dice-roller {
     width: 80%;
     margin: auto;
     display: flex;
+    flex-direction: column;
+}
+
+#infoContainer>div {
+    display: flex;
     justify-content: space-between;
     align-items: center;
 }

@@ -10,6 +10,8 @@ import { DiceRollerComponent } from './dice-roller/dice-roller.component';
 import { CardViewerComponent } from './card-viewer/card-viewer.component';
 import { DeckViewerComponent } from './deck-viewer/deck-viewer.component';
 import { DeckViewerCardComponent } from './deck-viewer-card/deck-viewer-card.component';
+import { GameOverComponent } from './game-over/game-over.component';
+import { MenuComponent } from './menu/menu.component';
 
 export let AppInjector: Injector;
 
@@ -22,7 +24,9 @@ export let AppInjector: Injector;
     DiceRollerComponent,
     CardViewerComponent,
     DeckViewerComponent,
-    DeckViewerCardComponent
+    DeckViewerCardComponent,
+    GameOverComponent,
+    MenuComponent
   ],
   imports: [
     BrowserModule,

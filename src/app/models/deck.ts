@@ -1,7 +1,7 @@
 import { AppInjector } from "../app.module";
 import { CurrentGameService } from "../services/current-game.service";
 import * as _ from 'lodash';
-import { flipColor } from "./counter-color";
+import { CounterColor, flipColor } from "./counter-color";
 import { GameCommand, GameCommandType } from "./game-command";
 import { TurnPhase } from "./TurnPhase";
 import { Player } from "./player";
@@ -71,6 +71,10 @@ export enum DeckType {
 
 
 
+
+
+
+
 export enum CardType {
     forward3,
     forward1,
@@ -84,7 +88,11 @@ export enum CardType {
     brokenTeleporter,
     brokenTeleporterForOpponent,
     doubleDice,
-    doubleDice3
+    doubleDice3,
+    dieDoesNothing,
+    swapPositions,
+    cancelNextCard,
+    resurrectAll
 }
 
 export class Card {
@@ -157,7 +165,7 @@ class Cards {
             (
                 CardType.draw2,
                 "Draw 2",
-                "Draw 2 cards",
+                "Draw 2 cards.",
                 () => this.draw2()
             ));
 
@@ -165,7 +173,7 @@ class Cards {
             (
                 CardType.extraRoll,
                 "Extra Roll",
-                "Roll the die and move the given amount",
+                "Roll the die and move the given amount.",
                 () => this.extraRoll()
             ));
 
@@ -173,7 +181,7 @@ class Cards {
             (
                 CardType.doubleDice,
                 "Double Die",
-                "Double the die score for the next roll",
+                "Double the die score for the next roll.",
                 () => this.doubleDice()
             ));
 
@@ -181,35 +189,61 @@ class Cards {
             (
                 CardType.doubleDice3,
                 "Double Die for 3 turns",
-                "Double the die score for the next three rolls",
+                "Double the die score for the next three rolls.",
                 () => this.doubleDice3()
             ));
 
-        let inProgress = [
-            "next dice roll does nothing for opponent",
-            "next card that opponent uses is cancelled",
-        ];
+        cards.push(new Card
+            (
+                CardType.dieDoesNothing,
+                "Die does nothing",
+                "Die roll does nothing for opponents next turn.",
+                () => this.dieDoesNothing()
+            ));
+
+        // cards.push(new Card
+        //     (
+        //         CardType.cancelNextCard,
+        //         "Cancel next card",
+        //         "The next card that our opponent uses is cancelled.",
+        //         () => this.cancelNextCard()
+        //     ));
 
         //unlockable
         cards.push(new Card
             (
                 CardType.brokenTeleporter,
-                "Broken Teleporter",
-                "Teleports you to a random square on the board",
+                "Random Teleporter",
+                "Teleports you to a random square on the board.",
                 () => this.brokenTeleporter()
             ));
 
         cards.push(new Card
             (
                 CardType.brokenTeleporterForOpponent,
-                "Broken Teleporter for opponent",
-                "Teleports your opponent to a random square on the board",
+                "Random Teleporter for opponent",
+                "Teleports your opponent to a random square on the board.",
                 () => this.brokenTeleporterForOpponent()
+            ));
+
+        cards.push(new Card
+            (
+                CardType.swapPositions,
+                "Swap Positions",
+                "Swaps the positions of the pieces on the board.",
+                () => this.swapPositions()
+            ));
+
+        cards.push(new Card
+            (
+                CardType.resurrectAll,
+                "Resurrect All",
+                "Move all used cards back to draw deck.",
+                () => this.resurrectAll()
             ));
 
         let unlockable: string[] = [
             "resurrect card from graveyard",
-            "move all used cards back to deck",
             "glue - when opponent moves onto square, their current turn ends",
             "hidden teleporter - when opponent moves onto square, they teleport back 10 squares",
             "swap saved cards",
@@ -217,17 +251,47 @@ class Cards {
             "swap active cards",
             "remove opponents active cards",
             "untrap - removes first trap that is triggered",
-            "one way only - when placed on a square, we cannot be moved backwards past this point, (except for by teleportation",
-            "swap positions"
+            "one way only - when placed on a square, we cannot be moved backwards past this point, (except for by teleportation"
         ];
 
         return cards;
     }
 
+    static resurrectAll() {
+        let currentGameService = AppInjector.get(CurrentGameService);
+        let player: Player = currentGameService.getCurrentPlayer();
+
+        player.deck.cards = player.discardedCards.cards.concat(player.deck.cards);
+        currentGameService.cardUsed();
+    }
+
+    static dieDoesNothing() {
+        let currentGameService = AppInjector.get(CurrentGameService);
+        let player: Player = currentGameService.getCurrentPlayer();
+
+        let callback = (command: GameCommand) => {
+            //only applies to opponent
+            if (currentGameService.getCurrentPlayer() == player) {
+                return;
+            }
+
+            if (command.type == GameCommandType.ROLLED) {
+                command.data = 0;
+                player.activeCards.removeFirstCardOfType(CardType.dieDoesNothing);
+                _.remove(currentGameService.preProcess, x => x == callback);
+            }
+        };
+
+        player.activeCards.putCardOnTop(CardType.dieDoesNothing);
+
+        currentGameService.preProcess.push(callback);
+        currentGameService.cardUsed();
+    }
+
     static doubleDice3() {
         let currentGameService = AppInjector.get(CurrentGameService);
         let player: Player = currentGameService.getCurrentPlayer();
-        
+
         //really need to store these so that we can quit halfway through
         //and save the game state
         //same with the draw 2 card
@@ -241,7 +305,7 @@ class Cards {
         //then just a data object that can be used to save and load data from and too
         //maybe the whole card would be best
         //as we will need to store the card type along with the data for easier deserialization
-        
+
         //we are also going to need multiple 'current drawn cards' stored on the game
         //for example, if the user has "draw 2" twice
         //or maybe that should be stored as an active card instead?
@@ -267,12 +331,12 @@ class Cards {
         //as that might multiple times
         //if we are serializing and deserializing a lot
         //as the modified description will get saved out
-        
+
         //then for the deserialization flow
         //clone the active cards
         //then clear it
         //and call the functions with their instances
-        
+
         //we can probably be a bit clever here
         //instead of doing card.apply(card)
         //we can just call card.apply()
@@ -294,17 +358,45 @@ class Cards {
                 command.data *= 2;
                 count++;
 
-                if(count == 3) {
+                if (count == 3) {
                     player.activeCards.removeFirstCardOfType(CardType.doubleDice3);
                     _.remove(currentGameService.preProcess, x => x == callback);
                 }
             }
         };
-        
+
         player.activeCards.putCardOnTop(CardType.doubleDice3);
 
         currentGameService.cardUsed();
         currentGameService.preProcess.push(callback);
+    }
+
+    static cancelNextCard() {
+        let currentGameService = AppInjector.get(CurrentGameService);
+        let player: Player = currentGameService.getCurrentPlayer();
+
+        let callback = (command: GameCommand) => {
+            if (currentGameService.getCurrentPlayer() != player) {
+                return;
+            }
+
+            if(command.type == GameCommandType.USE_SAVED_CARD || command.type == GameCommandType.USE_DRAWN_CARD) {
+                //the real card still needs to go to the discard pile
+                currentGameService.currentGame.processCommand(command);
+
+                //the card can continue it's normal processing
+                //but without doing anything useful
+                command.data = CardType.nothing;
+            
+                player.activeCards.removeFirstCardOfType(CardType.cancelNextCard);
+                _.remove(currentGameService.preProcess, x => x == callback);
+            }
+        };
+
+        player.activeCards.putCardOnTop(CardType.cancelNextCard);
+
+        currentGameService.preProcess.push(callback);
+        currentGameService.cardUsed();
     }
 
     static doubleDice() {
@@ -326,6 +418,18 @@ class Cards {
         player.activeCards.putCardOnTop(CardType.doubleDice);
 
         currentGameService.preProcess.push(callback);
+        currentGameService.cardUsed();
+    }
+
+    static swapPositions() {
+        let currentGameService = AppInjector.get(CurrentGameService);
+
+        let greenPlayerPos = currentGameService.currentGame.players.get(CounterColor.green)!.position;
+        let yellowPlayerPos = currentGameService.currentGame.players.get(CounterColor.yellow)!.position;
+
+        currentGameService.teleportCounter(CounterColor.green, yellowPlayerPos);
+        currentGameService.teleportCounter(CounterColor.yellow, greenPlayerPos);
+
         currentGameService.cardUsed();
     }
 
@@ -388,7 +492,7 @@ class Cards {
 
                     if (numCardsDrawn == 2) {
                         currentGameService.currentGame.changePhase(TurnPhase.drawn);
-                        
+
                         _.remove(currentGameService.postProcess, x => x == callback);
                         player.activeCards.removeFirstCardOfType(CardType.draw2);
                     } else {

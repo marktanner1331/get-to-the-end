@@ -1,34 +1,11 @@
-homepage
-    single player button
-
 current game
     save
-    check if game complete
 
-board component
-    when resizing
-    now we are inside a gamecomponent
-    we need to subtract the global rect of the board component
-
-control panel:
-   our active cards (including trap cards)
-   opponents active cards (not including traps)
-   number of cards left in deck
-
-current game service
-    ability to animate piece movements
-    so we need a turn phase for Moving
-    and maybe update the command types to include "turn phase changed"
-
-    no need to support complicated observable processCommand functions
-    as the board will push out a "finishedMoving()" to the current game service
-    
-    but i think we can do better than the processCommand function tree
-    and instead have it as a subject that different components/services can subscribe to
-
-    however a lot of the processCommand's rely on the game model being up to date first
-    so maybe we update the game manually, by calling its processCommand
-    and then broadcast it so everything else can update itself as expected
+    when opponent draws card
+    we need a better flow
+    as right now we do it on drawn
+    but we need to do it on 'used'
 
 deck
     serialization
+

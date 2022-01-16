@@ -37,6 +37,8 @@ export class Game {
             case GameCommandType.USE_SAVED_CARD:
                 {
                     let player = this.players.get(this.currentTurnColor)!;
+                    
+                    player.discardedCards.putCardOnTop(command.data);
                     player.savedCards.removeFirstCardOfType(command.data);
                 }
                 break;

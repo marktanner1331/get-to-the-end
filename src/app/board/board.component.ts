@@ -20,7 +20,6 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(private el: ElementRef, private resizeService: ResizeService, private currentGameService: CurrentGameService) {
     currentGameService.postProcess.push(x => this.processCommand(x));
-    //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
   ngAfterViewInit(): void {
@@ -93,14 +92,16 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
       let imageRect: DOMRect = board.getBoundingClientRect();
       if (imageRect.width > imageRect.height) {
         imageRect = new DOMRect(
-          imageRect.x + (imageRect.width - imageRect.height) / 2,
+          //imageRect.x + (imageRect.width - imageRect.height) / 2,
+          0,
           imageRect.y,
           imageRect.height,
           imageRect.height
         );
       } else {
         imageRect = new DOMRect(
-          imageRect.x,
+          //imageRect.x,
+          0,
           imageRect.y + (imageRect.height - imageRect.width) / 2,
           imageRect.width,
           imageRect.width

@@ -14,5 +14,10 @@
 </div>
 <app-dice-roller></app-dice-roller>
 <div id="infoContainer">
-    <span>active cards: {{numActiveCards}}</span> <button class="button" (click)="viewActiveCards()" [disabled]="numActiveCards == 0">View</button>
+    <div>
+        <span>Active Cards: {{numActiveCards}}</span> <button class="button" (click)="viewActiveCards()" [disabled]="numActiveCards == 0">View</button>
+    </div>
+    <div>
+        <span>Draw deck: {{drawDeckLength}}</span>
+    </div>
 </div>

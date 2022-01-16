@@ -16,9 +16,10 @@ export class CardViewerComponent implements OnInit {
 
   display: boolean = false;
 
+  ourCard: boolean = false;
+
   constructor(private currentGameService: CurrentGameService) {
     currentGameService.postProcess.push(x => this.processCommand(x));
-    //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
   processCommand(command: GameCommand) {
@@ -26,6 +27,11 @@ export class CardViewerComponent implements OnInit {
       case GameCommandType.CARD_DRAWN:
         if(this.currentGameService.isOurTurn()) {
           this.viewCard(command.data);
+          this.ourCard = true;
+        } else {
+          this.currentGameService.showingDrawnCardAck();
+          this.viewCard(command.data);
+          this.ourCard = false;
         }
         break;
     }
@@ -52,12 +58,18 @@ export class CardViewerComponent implements OnInit {
   }
 
   useNow() {
-    this.currentGameService.useDrawnCard();
     this.close();
+    this.currentGameService.useDrawnCard();
   }
 
   saveForLater() {
-    this.currentGameService.saveCard(this.cardType!);
+    let temp = this.cardType!;
     this.close();
+    this.currentGameService.saveCard(temp);
+  }
+
+  ok() {
+    this.close();
+    this.currentGameService.shownDrawnCardAck();
   }
 }

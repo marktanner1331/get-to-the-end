@@ -16,6 +16,7 @@ export class ControlPanelComponent implements OnInit {
   canDraw: boolean = false;
   canEndTurn: boolean = false;
   numActiveCards: number = 0;
+  drawDeckLength: number = 0;
 
   constructor(public currentGameService: CurrentGameService) {
     currentGameService.idle.subscribe(() => this.refresh());
@@ -41,6 +42,7 @@ export class ControlPanelComponent implements OnInit {
 
     let player: Player = this.currentGameService.getCurrentPlayer();
     this.numActiveCards = player.activeCards.length;
+    this.drawDeckLength = player.deck.length;
 
     let phase = this.currentGameService.currentGame.currentPhase;
     if(phase == TurnPhase.preroll) {
@@ -63,7 +65,7 @@ export class ControlPanelComponent implements OnInit {
   }
 
   roll() {
-    //todo: hide roll button
+    this.canRoll = false;
     this.currentGameService.roll();
   }
 

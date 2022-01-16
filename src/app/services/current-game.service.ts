@@ -64,7 +64,7 @@ export class CurrentGameService {
   }
 
   processCommand(command: GameCommand) {
-    console.log("command: " + GameCommandType[command.type] + ", data: " + JSON.stringify(command.data));
+    console.log(command.toString());
 
     this.idleCounter++;
 
@@ -82,11 +82,13 @@ export class CurrentGameService {
       case GameCommandType.ROLLING:
       case GameCommandType.MOVING:
       case GameCommandType.DRAW_CARD:
+      case GameCommandType.SHOWING_CARD:
         this.idleCounter++;
         break;
       case GameCommandType.ROLLED:
       case GameCommandType.MOVED:
       case GameCommandType.CARD_DRAWN:
+      case GameCommandType.SHOWN_CARD:
         this.idleCounter--;
         break;
     }
@@ -113,6 +115,14 @@ export class CurrentGameService {
       console.log("idle");
       this.idle.next();
     }
+  }
+
+  showingDrawnCardAck() {
+    this.processCommand(new GameCommand(GameCommandType.SHOWING_CARD));
+  }
+
+  shownDrawnCardAck() {
+    this.processCommand(new GameCommand(GameCommandType.SHOWN_CARD));
   }
 
   viewActiveCards() {

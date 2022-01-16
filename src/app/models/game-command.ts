@@ -1,10 +1,18 @@
+import { CardType } from "./deck";
+
 export class GameCommand {
     constructor(public type: GameCommandType, public data: any = null) {}
 
     toString() {
-      return "type: " + GameCommandType[this.type] +  ", data: " + JSON.stringify(this.data);
+      switch(this.type) {
+        case GameCommandType.CARD_DRAWN:
+          return "type: " + GameCommandType[this.type] +  ", data: " + CardType[this.data];
+        default:
+          return "type: " + GameCommandType[this.type] +  ", data: " + JSON.stringify(this.data);
+      }
     }
 }
+
 
 export enum GameCommandType {
   MOVE_COUNTER,
@@ -23,5 +31,7 @@ export enum GameCommandType {
   USE_SAVED_CARD,
   CARD_USED,
   TELEPORT_COUNTER,
-  VIEW_CARDS
+  VIEW_CARDS,
+  SHOWING_CARD,
+  SHOWN_CARD
 }

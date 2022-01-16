@@ -2,10 +2,12 @@
     <div id="blocker"></div>
     <div id="card">
         <div id="title">{{title}}</div>
+        <div *ngIf="!ourCard" id="opponentLabel">Opponent's Card</div>
         <div id="descriptionHolder">
             <div id="description">{{description}}</div>
-            <button class="button" (click)="useNow()">Use Now</button>
-            <button class="button" (click)="saveForLater()">Save</button>
+            <button *ngIf="ourCard" class="button" (click)="useNow()">Use Now</button>
+            <button *ngIf="ourCard" class="button" (click)="saveForLater()">Save</button>
+            <button *ngIf="!ourCard" class="button" (click)="ok()">Ok</button>
         </div>
     </div>
 </ng-container>
