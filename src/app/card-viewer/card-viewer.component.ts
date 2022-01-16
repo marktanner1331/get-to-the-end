@@ -17,7 +17,7 @@ export class CardViewerComponent implements OnInit {
   display: boolean = false;
 
   constructor(private currentGameService: CurrentGameService) {
-    currentGameService.command.push(x => this.processCommand(x));
+    currentGameService.postProcess.push(x => this.processCommand(x));
     //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 

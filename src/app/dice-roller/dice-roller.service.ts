@@ -16,6 +16,6 @@ export class DiceRollerService {
     }
 
     reset() {
-        this.diceRollercomponent.value = undefined;
+        this.diceRollercomponent.value = 0;
     }
 }

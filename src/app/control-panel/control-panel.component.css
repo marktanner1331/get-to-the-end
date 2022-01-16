@@ -27,4 +27,17 @@
 
 app-dice-roller {
     margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#infoContainer {
+    width: 80%;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#infoContainer button {
+    display: inline-block;
 }

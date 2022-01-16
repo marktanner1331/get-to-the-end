@@ -19,7 +19,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
   yellowCounterPos = 0;
 
   constructor(private el: ElementRef, private resizeService: ResizeService, private currentGameService: CurrentGameService) {
-    currentGameService.command.push(x => this.processCommand(x));
+    currentGameService.postProcess.push(x => this.processCommand(x));
     //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
@@ -78,8 +78,11 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
             ));
           }
         });
+    } else if(command.type == GameCommandType.TELEPORT_COUNTER) {
+      this.greenCounterPos = this.currentGameService.currentGame.getPositionOfPlayer(CounterColor.green);
+      this.yellowCounterPos = this.currentGameService.currentGame.getPositionOfPlayer(CounterColor.yellow);
+      this.resetCounterPositions();
     }
-
   }
 
   resetCounterPositions() {

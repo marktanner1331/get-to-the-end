@@ -9,7 +9,7 @@ import { DiceRollerService } from './dice-roller.service';
 })
 export class DiceRollerComponent implements OnInit {
   public rolling: boolean = false;
-  public value?: number;
+  public value: number = 0;
 
   constructor(private diceRollerService: DiceRollerService) {
     this.diceRollerService.diceRollercomponent = this;
@@ -22,7 +22,7 @@ export class DiceRollerComponent implements OnInit {
 
   @HostBinding('style.--img0')
   public get img0(): string {
-    return `url("assets/dice/${this.value ?? 0}.png")`;
+    return `url("assets/dice/${this.value}.png")`;
   }
 
   @HostBinding('style.--img1')

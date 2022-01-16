@@ -13,3 +13,6 @@
     <button class="button" (click)="endTurn()" *ngIf="canEndTurn">End Turn</button>
 </div>
 <app-dice-roller></app-dice-roller>
+<div id="infoContainer">
+    <span>active cards: {{numActiveCards}}</span> <button class="button" (click)="viewActiveCards()" [disabled]="numActiveCards == 0">View</button>
+</div>

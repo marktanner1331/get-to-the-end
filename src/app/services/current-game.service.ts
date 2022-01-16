@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { DeckViewerService } from '../deck-viewer/deck-viewer.service';
 import { DiceRollerService } from '../dice-roller/dice-roller.service';
 import { AILevel1 } from '../models/AILevel1';
 import { CounterColor } from '../models/counter-color';
@@ -20,11 +19,11 @@ export class CurrentGameService {
   idleCounter: number = 0;
   idle: Subject<void> = new Subject();
 
-  command: ((command: GameCommand) => void)[] = [];
+  preProcess: ((command: GameCommand) => void)[] = [];
+  postProcess: ((command: GameCommand) => void)[] = [];
 
   constructor(
-    private diceRollerService: DiceRollerService,
-    private deckViewerService: DeckViewerService) { }
+    private diceRollerService: DiceRollerService) { }
 
   startGame() {
     this.AI.init();
@@ -59,10 +58,19 @@ export class CurrentGameService {
     this.processCommand(command);
   }
 
+  teleportCounter(color: CounterColor, position: number) {
+    let command: GameCommand = new GameCommand(GameCommandType.TELEPORT_COUNTER, { color: color, position: position });
+    this.processCommand(command);
+  }
+
   processCommand(command: GameCommand) {
     console.log("command: " + GameCommandType[command.type] + ", data: " + JSON.stringify(command.data));
 
     this.idleCounter++;
+
+    for(let callback of this.preProcess) {
+      callback(command);
+    }
 
     let initialPhase = this.currentGame.currentPhase;
     this.currentGame.processCommand(command);
@@ -84,10 +92,10 @@ export class CurrentGameService {
     }
 
     switch (command.type) {
-      case GameCommandType.ROLLED:
-      case GameCommandType.MOVE_COUNTER:
+      case GameCommandType.MOVED:
         if (this.currentGame.isComplete()) {
-          this.processCommand(new GameCommand(GameCommandType.GAME_COMPLETE, this.currentGame.getWinningPlayer()))
+          this.processCommand(new GameCommand(GameCommandType.GAME_COMPLETE, this.currentGame.getWinningPlayer()));
+          return;
         }
         break;
       case GameCommandType.USE_SAVED_CARD:
@@ -96,7 +104,7 @@ export class CurrentGameService {
         break;
     }
 
-    for(let callback of this.command) {
+    for(let callback of this.postProcess) {
       callback(command);
     }
 
@@ -107,8 +115,12 @@ export class CurrentGameService {
     }
   }
 
+  viewActiveCards() {
+    this.processCommand(new GameCommand(GameCommandType.VIEW_CARDS, this.getCurrentPlayer().activeCards));
+  }
+
   viewSavedCards() {
-    this.deckViewerService.show(this.getCurrentPlayer().savedCards);
+    this.processCommand(new GameCommand(GameCommandType.VIEW_CARDS, this.getCurrentPlayer().savedCards));
   }
 
   saveCard(card: CardType) {
@@ -129,7 +141,7 @@ export class CurrentGameService {
 
   cardUsed() {
     this.processCommand(new GameCommand(GameCommandType.CARD_USED));
-
+    
     if (this.currentGame.currentPhase == TurnPhase.drawn) {
       this.endTurn();
     }

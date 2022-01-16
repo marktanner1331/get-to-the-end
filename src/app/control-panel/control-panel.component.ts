@@ -15,6 +15,7 @@ export class ControlPanelComponent implements OnInit {
   canRoll: boolean = false;
   canDraw: boolean = false;
   canEndTurn: boolean = false;
+  numActiveCards: number = 0;
 
   constructor(public currentGameService: CurrentGameService) {
     currentGameService.idle.subscribe(() => this.refresh());
@@ -30,9 +31,16 @@ export class ControlPanelComponent implements OnInit {
     this.canViewSavedCards = false;
     this.canEndTurn = false;
 
+    //start off by disabling this button
+    //in case it's not our turn
+    this.numActiveCards = 0;
+    
     if (!this.currentGameService.isOurTurn()) {
       return;
     }
+
+    let player: Player = this.currentGameService.getCurrentPlayer();
+    this.numActiveCards = player.activeCards.length;
 
     let phase = this.currentGameService.currentGame.currentPhase;
     if(phase == TurnPhase.preroll) {
@@ -44,6 +52,10 @@ export class ControlPanelComponent implements OnInit {
       this.canDraw = hasDeck;
       this.canEndTurn = !hasDeck;
     }
+  }
+
+  viewActiveCards() {
+    this.currentGameService.viewActiveCards();
   }
 
   endTurn() {

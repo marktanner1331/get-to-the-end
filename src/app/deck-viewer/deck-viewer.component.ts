@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CardType, Deck } from '../models/deck';
+import { GameCommand, GameCommandType } from '../models/game-command';
 import { CurrentGameService } from '../services/current-game.service';
-import { DeckViewerService } from './deck-viewer.service';
-
 @Component({
   selector: 'app-deck-viewer',
   templateUrl: './deck-viewer.component.html',
@@ -12,8 +11,8 @@ export class DeckViewerComponent implements OnInit {
   display: boolean = false;
   deck?: Deck;
 
-  constructor(private currentGameService: CurrentGameService, deckViewerService: DeckViewerService) {
-    deckViewerService.deckViewerComponent = this;
+  constructor(private currentGameService: CurrentGameService) {
+    currentGameService.postProcess.push((command) => this.processCommand(command));
   }
 
   ngOnInit(): void {
@@ -25,9 +24,11 @@ export class DeckViewerComponent implements OnInit {
     this.currentGameService.useSavedCard(card);
   }
 
-  show(deck: Deck) {
-    this.deck = deck;
-    this.display = true;
+  processCommand(command: GameCommand) {
+    if(command.type == GameCommandType.VIEW_CARDS) {
+      this.deck = command.data;
+      this.display = true;
+    }
   }
 
   close() {

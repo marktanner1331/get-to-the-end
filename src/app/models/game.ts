@@ -19,6 +19,7 @@ export class Game {
     processCommand(command: GameCommand) {
         switch (command.type) {
             case GameCommandType.MOVE_COUNTER:
+            case GameCommandType.TELEPORT_COUNTER:
                 this.players.get(command.data.color)!.position = (command.data.position as number);
                 break;
             case GameCommandType.DRAW_CARD:
