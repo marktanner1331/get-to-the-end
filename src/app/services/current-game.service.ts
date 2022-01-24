@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import * as _ from 'lodash';
 import { Subject } from 'rxjs';
 import { DiceRollerService } from '../dice-roller/dice-roller.service';
 import { AILevel1 } from '../models/AILevel1';
@@ -68,7 +69,7 @@ export class CurrentGameService {
 
     this.idleCounter++;
 
-    for(let callback of this.preProcess) {
+    for (let callback of this.preProcess) {
       callback(command);
     }
 
@@ -78,7 +79,7 @@ export class CurrentGameService {
       console.log("phase: previous: " + TurnPhase[initialPhase] + ", new: " + TurnPhase[this.currentGame.currentPhase]);
     }
 
-    switch(command.type) {
+    switch (command.type) {
       case GameCommandType.ROLLING:
       case GameCommandType.MOVING:
       case GameCommandType.DRAW_CARD:
@@ -106,12 +107,12 @@ export class CurrentGameService {
         break;
     }
 
-    for(let callback of this.postProcess) {
+    for (let callback of this.postProcess) {
       callback(command);
     }
 
     this.idleCounter--;
-    if(this.idleCounter == 0) {
+    if (this.idleCounter == 0) {
       console.log("idle");
       this.idle.next();
     }
@@ -142,16 +143,42 @@ export class CurrentGameService {
   }
 
   useSavedCard(card: CardType) {
-    this.processCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, card));
+    if (this.isOurTurn()) {
+      this.processCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, card));
+    } else {
+      this.processCommand(new GameCommand(GameCommandType.SHOW_CARD, card));
+      let callback = (command: GameCommand) => {
+        if (command.type == GameCommandType.SHOWN_CARD) {
+          this.processCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, card));
+
+          _.remove(this.postProcess, x => x == callback);
+        };
+
+        this.postProcess.push(callback);
+      }
+    }
   }
 
   useDrawnCard() {
-    this.processCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD, this.currentGame.currentDrawnCard!));
+    if (this.isOurTurn()) {
+      this.processCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD, this.currentGame.currentDrawnCard!));
+    } else {
+      this.processCommand(new GameCommand(GameCommandType.SHOW_CARD, this.currentGame.currentDrawnCard!));
+      let callback = (command: GameCommand) => {
+        if (command.type == GameCommandType.SHOWN_CARD) {
+          this.processCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD, this.currentGame.currentDrawnCard!));
+          
+          _.remove(this.postProcess, x => x == callback);
+        };
+      }
+
+      this.postProcess.push(callback);
+    }
   }
 
   cardUsed() {
     this.processCommand(new GameCommand(GameCommandType.CARD_USED));
-    
+
     if (this.currentGame.currentPhase == TurnPhase.drawn) {
       this.endTurn();
     }

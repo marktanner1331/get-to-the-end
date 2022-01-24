@@ -14,6 +14,8 @@ export class GameCommand {
 }
 
 
+
+
 export enum GameCommandType {
   MOVE_COUNTER,
   ROLLING,
@@ -33,5 +35,6 @@ export enum GameCommandType {
   TELEPORT_COUNTER,
   VIEW_CARDS,
   SHOWING_CARD,
-  SHOWN_CARD
+  SHOWN_CARD,
+  SHOW_CARD
 }

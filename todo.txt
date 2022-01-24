@@ -1,11 +1,6 @@
 current game
     save
 
-    when opponent draws card
-    we need a better flow
-    as right now we do it on drawn
-    but we need to do it on 'used'
-
 deck
     serialization
 
