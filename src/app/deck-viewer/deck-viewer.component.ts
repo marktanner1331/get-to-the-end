@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CardType, Deck } from '../models/deck';
+import { Card, CardType, Deck } from '../models/deck';
 import { GameCommand, GameCommandType } from '../models/game-command';
 import { CurrentGameService } from '../services/current-game.service';
 @Component({
@@ -19,7 +19,7 @@ export class DeckViewerComponent implements OnInit {
     
   }
 
-  useCard(card: CardType) {
+  useCard(card: Card) {
     this.display = false;
     this.currentGameService.useSavedCard(card);
   }

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { CardType, Deck } from '../models/deck';
+import { Card, CardType, Deck } from '../models/deck';
 
 @Component({
   selector: 'app-deck-viewer-card',
@@ -7,18 +7,17 @@ import { CardType, Deck } from '../models/deck';
   styleUrls: ['./deck-viewer-card.component.css']
 })
 export class DeckViewerCardComponent implements OnInit {
-  cardType!: CardType;
+  _card!: Card;
   title: string = "";
   description: string = "";
 
-  @Output() use: EventEmitter<CardType> = new EventEmitter();
+  @Output() use: EventEmitter<Card> = new EventEmitter();
 
-  @Input() set card(value: CardType) {
-    this.cardType = value;
+  @Input() set card(value: Card) {
+    this._card = value;
 
-    let card = Deck.getCard(value);
-    this.title = card.title;
-    this.description = card.description;
+    this.title = value.title;
+    this.description = value.description;
   }
 
   constructor() { }
@@ -27,6 +26,6 @@ export class DeckViewerCardComponent implements OnInit {
   }
 
   useNow() {
-    this.use.next(this.cardType);
+    this.use.next(this._card);
   }
 }

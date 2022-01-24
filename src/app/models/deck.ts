@@ -7,13 +7,13 @@ import { TurnPhase } from "./TurnPhase";
 import { Player } from "./player";
 
 export class Deck {
-    cards: CardType[];
+    cards: Card[];
 
-    constructor(public deckType: DeckType, cards?: CardType[]) {
+    constructor(public deckType: DeckType, cards?: Card[]) {
         if (cards) {
             this.cards = cards;
         } else {
-            this.cards = Cards.cards.map(x => x.cardType);
+            this.cards = Card.cardTypes().map(x => Card.cardFactory(x));
             Deck.shuffleArray(this.cards);
         }
     }
@@ -23,31 +23,31 @@ export class Deck {
     }
 
     removeFirstCardOfType(card: CardType) {
-        let index = this.cards.findIndex(x => x == card);
+        let index = this.cards.findIndex(x => x.cardType == card);
         this.cards.splice(index, 1);
     }
 
-    static getCard(card: CardType): Card {
-        return Cards.cards.find(x => x.cardType == card)!;
+    getCard(card: CardType): Card {
+        return this.cards.find(x => x.cardType == card)!;
     }
 
-    static getCardFunction(card: CardType): () => void {
-        return Cards.cards.find(x => x.cardType == card)!.action;
+    getCardFunction(card: CardType): () => void {
+        return this.cards.find(x => x.cardType == card)!.action;
     }
 
     peekTopCard(): CardType {
-        return this.cards[this.cards.length - 1];
+        return this.cards[this.cards.length - 1].cardType;
     }
 
-    removeTopCard(): CardType {
+    removeTopCard(): Card {
         return this.cards.pop()!;
     }
 
-    putCardOnBotton(card: CardType) {
+    putCardOnBotton(card: Card) {
         this.cards.unshift(card);
     }
 
-    putCardOnTop(card: CardType) {
+    putCardOnTop(card: Card) {
         this.cards.push(card);
     }
 
@@ -68,13 +68,6 @@ export enum DeckType {
     active
 }
 
-
-
-
-
-
-
-
 export enum CardType {
     forward3,
     forward1,
@@ -91,115 +84,140 @@ export enum CardType {
     doubleDice3,
     dieDoesNothing,
     swapPositions,
-    cancelNextCard,
+    //cancelNextCard,
     resurrectAll
 }
 
 export class Card {
-    constructor(public cardType: CardType, public title: string, public description: string, public action: () => void) { }
-}
+    action: () => void;
 
-class Cards {
-    static cards: Card[] = Cards.generateCards();
+    constructor(public cardType: CardType, public title: string, public description: string, action: (card: Card) => void) {
+        this.action = () => action(this);
+    }
 
-    static generateCards(): Card[] {
-        let cards: Card[] = [];
+    static cardTypes(): CardType[] {
+        return Object.keys(CardType)
+            .map(x => Number(x))
+            .filter((x) => !isNaN(x));
+    }
 
-        cards.push(new Card
-            (
-                CardType.forward1,
-                "Forward 1",
-                "Move Forward 1 square.",
-                () => this.moveUs(1)
-            ));
-
-        cards.push(new Card
-            (
-                CardType.forward3,
-                "Forward 3",
-                "Move Forward 3 squares.",
-                () => this.moveUs(3)
-            ));
-
-        cards.push(new Card
-            (
-                CardType.forward5,
-                "Forward 5",
-                "Move Forward 5 squares.",
-                () => this.moveUs(5)
-            ));
-
-        cards.push(new Card
-            (
-                CardType.nothing,
-                "Nothing",
-                "This card does nothing.",
-                () => this.nothing()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.back1,
-                "Opponent back 1",
-                "Move our opponent back 1 square.",
-                () => this.moveThem(-1)
-            ));
-
-        cards.push(new Card
-            (
-                CardType.back3,
-                "Opponent back 3",
-                "Move our opponent back 3 squares.",
-                () => this.moveThem(-3)
-            ));
-
-        cards.push(new Card
-            (
-                CardType.back5,
-                "Opponent back 5",
-                "Move our opponent back 5 squares.",
-                () => this.moveThem(-5)
-            ));
-
-        cards.push(new Card
-            (
-                CardType.draw2,
-                "Draw 2",
-                "Draw 2 cards.",
-                () => this.draw2()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.extraRoll,
-                "Extra Roll",
-                "Roll the die and move the given amount.",
-                () => this.extraRoll()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.doubleDice,
-                "Double Die",
-                "Double the die score for the next roll.",
-                () => this.doubleDice()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.doubleDice3,
-                "Double Die for 3 turns",
-                "Double the die score for the next three rolls.",
-                () => this.doubleDice3()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.dieDoesNothing,
-                "Die does nothing",
-                "Die roll does nothing for opponents next turn.",
-                () => this.dieDoesNothing()
-            ));
+    static cardFactory(cardType: CardType): Card {
+        switch (cardType) {
+            case CardType.forward1:
+                return new Card(
+                    CardType.forward1,
+                    "Forward 1",
+                    "Move Forward 1 square.",
+                    (card) => this.moveUs(1)
+                );
+            case CardType.forward3:
+                return new Card(
+                    CardType.forward3,
+                    "Forward 3",
+                    "Move Forward 3 squares.",
+                    (card) => this.moveUs(3)
+                );
+            case CardType.forward5:
+                return new Card(
+                    CardType.forward5,
+                    "Forward 5",
+                    "Move Forward 5 squares.",
+                    (card) => this.moveUs(5)
+                );
+            case CardType.nothing:
+                return new Card(
+                    CardType.nothing,
+                    "Nothing",
+                    "This card does nothing.",
+                    (card) => this.nothing(card)
+                );
+            case CardType.back1:
+                return new Card(
+                    CardType.back1,
+                    "Opponent back 1",
+                    "Move our opponent back 1 square.",
+                    (card) => this.moveThem(-1)
+                );
+            case CardType.back3:
+                return new Card(
+                    CardType.back3,
+                    "Opponent back 3",
+                    "Move our opponent back 3 squares.",
+                    (card) => this.moveThem(-3)
+                );
+            case CardType.back5:
+                return new Card(
+                    CardType.back5,
+                    "Opponent back 5",
+                    "Move our opponent back 5 squares.",
+                    (card) => this.moveThem(-5)
+                );
+            case CardType.draw2:
+                return new Card(
+                    CardType.draw2,
+                    "Draw 2",
+                    "Draw 2 cards.",
+                    (card) => this.draw2(card)
+                );
+            case CardType.extraRoll:
+                return new Card(
+                    CardType.extraRoll,
+                    "Extra Roll",
+                    "Roll the die and move the given amount.",
+                    (card) => this.extraRoll(card)
+                );
+            case CardType.doubleDice:
+                return new Card(
+                    CardType.doubleDice,
+                    "Double Die",
+                    "Double the die score for the next roll.",
+                    (card) => this.doubleDice(card)
+                );
+            case CardType.doubleDice3:
+                return new Card(
+                    CardType.doubleDice3,
+                    "Double Die for 3 turns",
+                    "Double the die score for the next three rolls.",
+                    (card) => this.doubleDice3(card)
+                );
+            case CardType.dieDoesNothing:
+                return new Card(
+                    CardType.dieDoesNothing,
+                    "Die does nothing",
+                    "Die roll does nothing for opponents next turn.",
+                    (card) => this.dieDoesNothing(card)
+                );
+            case CardType.brokenTeleporter:
+                return new Card(
+                    CardType.brokenTeleporter,
+                    "Random Teleporter",
+                    "Teleports you to a random square on the board.",
+                    (card) => this.brokenTeleporter(card)
+                );
+            case CardType.brokenTeleporterForOpponent:
+                return new Card(
+                    CardType.brokenTeleporterForOpponent,
+                    "Random Teleporter for opponent",
+                    "Teleports your opponent to a random square on the board.",
+                    (card) => this.brokenTeleporterForOpponent(card)
+                );
+            case CardType.swapPositions:
+                return new Card(
+                    CardType.swapPositions,
+                    "Swap Positions",
+                    "Swaps the positions of the pieces on the board.",
+                    (card) => this.swapPositions(card)
+                );
+            case CardType.resurrectAll:
+                return new Card(
+                    CardType.resurrectAll,
+                    "Resurrect All",
+                    "Move all used cards back to draw deck.",
+                    (card) => this.resurrectAll(card)
+                );
+            default:
+                throw new Error("unknown card: " + CardType[cardType]);
+        }
 
         // cards.push(new Card
         //     (
@@ -208,39 +226,6 @@ class Cards {
         //         "The next card that our opponent uses is cancelled.",
         //         () => this.cancelNextCard()
         //     ));
-
-        //unlockable
-        cards.push(new Card
-            (
-                CardType.brokenTeleporter,
-                "Random Teleporter",
-                "Teleports you to a random square on the board.",
-                () => this.brokenTeleporter()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.brokenTeleporterForOpponent,
-                "Random Teleporter for opponent",
-                "Teleports your opponent to a random square on the board.",
-                () => this.brokenTeleporterForOpponent()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.swapPositions,
-                "Swap Positions",
-                "Swaps the positions of the pieces on the board.",
-                () => this.swapPositions()
-            ));
-
-        cards.push(new Card
-            (
-                CardType.resurrectAll,
-                "Resurrect All",
-                "Move all used cards back to draw deck.",
-                () => this.resurrectAll()
-            ));
 
         let unlockable: string[] = [
             "resurrect card from graveyard",
@@ -253,11 +238,9 @@ class Cards {
             "untrap - removes first trap that is triggered",
             "one way only - when placed on a square, we cannot be moved backwards past this point, (except for by teleportation"
         ];
-
-        return cards;
     }
 
-    static resurrectAll() {
+    private static resurrectAll(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
         let player: Player = currentGameService.getCurrentPlayer();
 
@@ -265,7 +248,7 @@ class Cards {
         currentGameService.cardUsed();
     }
 
-    static dieDoesNothing() {
+    private static dieDoesNothing(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
         let player: Player = currentGameService.getCurrentPlayer();
 
@@ -282,13 +265,13 @@ class Cards {
             }
         };
 
-        player.activeCards.putCardOnTop(CardType.dieDoesNothing);
+        player.activeCards.putCardOnTop(card);
 
         currentGameService.preProcess.push(callback);
         currentGameService.cardUsed();
     }
 
-    static doubleDice3() {
+    private static doubleDice3(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
         let player: Player = currentGameService.getCurrentPlayer();
 
@@ -365,41 +348,41 @@ class Cards {
             }
         };
 
-        player.activeCards.putCardOnTop(CardType.doubleDice3);
+        player.activeCards.putCardOnTop(card);
 
         currentGameService.cardUsed();
         currentGameService.preProcess.push(callback);
     }
 
-    static cancelNextCard() {
-        let currentGameService = AppInjector.get(CurrentGameService);
-        let player: Player = currentGameService.getCurrentPlayer();
+    // private static cancelNextCard(card: Card) {
+    //     let currentGameService = AppInjector.get(CurrentGameService);
+    //     let player: Player = currentGameService.getCurrentPlayer();
 
-        let callback = (command: GameCommand) => {
-            if (currentGameService.getCurrentPlayer() != player) {
-                return;
-            }
+    //     let callback = (command: GameCommand) => {
+    //         if (currentGameService.getCurrentPlayer() != player) {
+    //             return;
+    //         }
 
-            if(command.type == GameCommandType.USE_SAVED_CARD || command.type == GameCommandType.USE_DRAWN_CARD) {
-                //the real card still needs to go to the discard pile
-                currentGameService.currentGame.processCommand(command);
+    //         if (command.type == GameCommandType.USE_SAVED_CARD || command.type == GameCommandType.USE_DRAWN_CARD) {
+    //             //the real card still needs to go to the discard pile
+    //             currentGameService.currentGame.processCommand(command);
 
-                //the card can continue it's normal processing
-                //but without doing anything useful
-                command.data = CardType.nothing;
-            
-                player.activeCards.removeFirstCardOfType(CardType.cancelNextCard);
-                _.remove(currentGameService.preProcess, x => x == callback);
-            }
-        };
+    //             //the card can continue it's normal processing
+    //             //but without doing anything useful
+    //             command.data = CardType.nothing;
 
-        player.activeCards.putCardOnTop(CardType.cancelNextCard);
+    //             player.activeCards.removeFirstCardOfType(CardType.cancelNextCard);
+    //             _.remove(currentGameService.preProcess, x => x == callback);
+    //         }
+    //     };
 
-        currentGameService.preProcess.push(callback);
-        currentGameService.cardUsed();
-    }
+    //     player.activeCards.putCardOnTop(card);
 
-    static doubleDice() {
+    //     currentGameService.preProcess.push(callback);
+    //     currentGameService.cardUsed();
+    // }
+
+    private static doubleDice(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
         let player: Player = currentGameService.getCurrentPlayer();
 
@@ -415,13 +398,13 @@ class Cards {
             }
         };
 
-        player.activeCards.putCardOnTop(CardType.doubleDice);
+        player.activeCards.putCardOnTop(card);
 
         currentGameService.preProcess.push(callback);
         currentGameService.cardUsed();
     }
 
-    static swapPositions() {
+    private static swapPositions(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
 
         let greenPlayerPos = currentGameService.currentGame.players.get(CounterColor.green)!.position;
@@ -433,7 +416,7 @@ class Cards {
         currentGameService.cardUsed();
     }
 
-    static brokenTeleporterForOpponent() {
+    private static brokenTeleporterForOpponent(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
 
         //don't want to be able to teleport to 99
@@ -443,7 +426,7 @@ class Cards {
         currentGameService.cardUsed();
     }
 
-    static brokenTeleporter() {
+    private static brokenTeleporter(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
 
         //don't want to be able to teleport to 99
@@ -453,7 +436,7 @@ class Cards {
         currentGameService.cardUsed();
     }
 
-    static extraRoll() {
+    private static extraRoll(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
 
         let callback = (command: GameCommand) => {
@@ -479,7 +462,7 @@ class Cards {
         currentGameService.roll();
     }
 
-    static draw2() {
+    private static draw2(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
         let player: Player = currentGameService.getCurrentPlayer();
         let numCardsDrawn = 0;
@@ -498,11 +481,10 @@ class Cards {
                     } else {
                         currentGameService.currentGame.changePhase(TurnPhase.predraw);
                     }
-                    break;
             }
         };
 
-        player.activeCards.putCardOnTop(CardType.draw2);
+        player.activeCards.putCardOnTop(card);
         currentGameService.currentGame.changePhase(TurnPhase.predraw);
 
         currentGameService.cardUsed();
@@ -514,12 +496,12 @@ class Cards {
         currentGameService.postProcess.push(callback);
     }
 
-    static nothing() {
+    private static nothing(card: Card) {
         let currentGameService = AppInjector.get(CurrentGameService);
         currentGameService.cardUsed();
     }
 
-    static moveThem(amount: number) {
+    private static moveThem(amount: number) {
         let currentGameService = AppInjector.get(CurrentGameService);
 
         let callback = (command: GameCommand) => {
@@ -534,7 +516,7 @@ class Cards {
         currentGameService.moveCounterByAmount(flipColor(currentGameService.currentGame.currentTurnColor), amount);
     }
 
-    static moveUs(amount: number) {
+    private static moveUs(amount: number) {
         let currentGameService = AppInjector.get(CurrentGameService);
 
         let callback = (command: GameCommand) => {

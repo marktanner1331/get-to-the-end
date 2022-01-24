@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { DiceRollerService } from '../dice-roller/dice-roller.service';
 import { AILevel1 } from '../models/AILevel1';
 import { CounterColor } from '../models/counter-color';
-import { CardType, Deck } from '../models/deck';
+import { Card, CardType, Deck } from '../models/deck';
 import { Game } from '../models/game';
 import { GameCommand, GameCommandType } from '../models/game-command';
 import { Player } from '../models/player';
@@ -103,7 +103,7 @@ export class CurrentGameService {
         break;
       case GameCommandType.USE_SAVED_CARD:
       case GameCommandType.USE_DRAWN_CARD:
-        Deck.getCardFunction(command.data)();
+        (command.data as Card).action();
         break;
     }
 
@@ -134,7 +134,7 @@ export class CurrentGameService {
     this.processCommand(new GameCommand(GameCommandType.VIEW_CARDS, this.getCurrentPlayer().savedCards));
   }
 
-  saveCard(card: CardType) {
+  saveCard(card: Card) {
     this.processCommand(new GameCommand(GameCommandType.SAVE_CARD, card));
 
     if (this.currentGame.currentPhase == TurnPhase.drawn) {
@@ -142,7 +142,7 @@ export class CurrentGameService {
     }
   }
 
-  useSavedCard(card: CardType) {
+  useSavedCard(card: Card) {
     if (this.isOurTurn()) {
       this.processCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, card));
     } else {

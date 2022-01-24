@@ -1,6 +1,6 @@
 import { Component, HostBinding, OnInit } from '@angular/core';
 import { Observable, Subscriber } from 'rxjs';
-import { CardType, Deck } from '../models/deck';
+import { Card, CardType, Deck } from '../models/deck';
 import { GameCommand, GameCommandType } from '../models/game-command';
 import { CurrentGameService } from '../services/current-game.service';
 
@@ -10,7 +10,7 @@ import { CurrentGameService } from '../services/current-game.service';
   styleUrls: ['./card-viewer.component.css']
 })
 export class CardViewerComponent implements OnInit {
-  cardType?: CardType;
+  card?: Card;
   title: string = "";
   description: string = "";
 
@@ -40,10 +40,9 @@ export class CardViewerComponent implements OnInit {
     }
   }
 
-  viewCard(cardType: CardType) {
-    this.cardType = cardType;
+  viewCard(card: Card) {
+    this.card = card;
 
-    let card = Deck.getCard(cardType);
     this.title = card.title;
     this.description = card.description;
 
@@ -54,7 +53,7 @@ export class CardViewerComponent implements OnInit {
   }
 
   close() {
-    this.cardType = undefined;
+    this.card = undefined;
     this.title = "";
     this.description = "";
     this.display = false;
@@ -66,7 +65,7 @@ export class CardViewerComponent implements OnInit {
   }
 
   saveForLater() {
-    let temp = this.cardType!;
+    let temp = this.card!;
     this.close();
     this.currentGameService.saveCard(temp);
   }

@@ -1,7 +1,7 @@
 import { PACKAGE_ROOT_URL } from "@angular/core";
 import * as _ from "lodash";
 import { CounterColor, flipColor } from "./counter-color";
-import { CardType, Deck } from "./deck";
+import { Card, CardType, Deck } from "./deck";
 import { GameCommand, GameCommandType } from "./game-command";
 import { Player } from "./player";
 import { TurnPhase } from "./TurnPhase";
@@ -11,7 +11,7 @@ export class Game {
     players: Map<CounterColor, Player> = new Map();
     currentTurnColor: CounterColor = CounterColor.green;
     currentPhase: TurnPhase = TurnPhase.preroll;
-    currentDrawnCard?: CardType;
+    currentDrawnCard?: Card;
 
     constructor() {
     }
