@@ -1,0 +1,12 @@
+<ng-container *ngIf="display">
+    <div id="blocker"></div>
+    <div id="main">
+        <div id="header">
+            <h2>Join Link</h2>
+            <div class="button" id="closeButton" (click)="close()">X</div>
+        </div>
+        <div id="linkContainer">
+            <a href="{{link}}">{{link}}</a>
+        </div>
+    </div>
+</ng-container>

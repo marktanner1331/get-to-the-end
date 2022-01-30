@@ -1,19 +1,46 @@
 import { PACKAGE_ROOT_URL } from "@angular/core";
 import * as _ from "lodash";
 import { CounterColor, flipColor } from "./counter-color";
-import { Card, CardType, Deck } from "./deck";
+import { Card, CardFactory, CardType, Deck } from "./deck";
 import { GameCommand, GameCommandType } from "./game-command";
 import { Player } from "./player";
 import { TurnPhase } from "./TurnPhase";
 
 export class Game {
-
     players: Map<CounterColor, Player> = new Map();
     currentTurnColor: CounterColor = CounterColor.green;
     currentPhase: TurnPhase = TurnPhase.preroll;
     currentDrawnCard?: Card;
+    hasStarted: boolean = false;
+    isHost: boolean = true;
+    isRemote: boolean = false;
+    gameId: string = "";
+    rngSeed: number = 0;
 
-    constructor() {
+    //used by the remote to keep track of things
+    numUpdates: number = 0;
+
+    constructor(gameId: string) {
+        this.gameId = gameId;
+        this.rngSeed = this.xmur3(this.gameId)();
+    }
+
+    nextRand() {
+        var t = this.rngSeed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+
+    private xmur3(str: string): () => number {
+        for (var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+            h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+            h = h << 13 | h >>> 19;
+        } return () => {
+            h = Math.imul(h ^ (h >>> 16), 2246822507);
+            h = Math.imul(h ^ (h >>> 13), 3266489909);
+            return (h ^= h >>> 16) >>> 0;
+        }
     }
 
     processCommand(command: GameCommand) {
@@ -37,7 +64,7 @@ export class Game {
             case GameCommandType.USE_SAVED_CARD:
                 {
                     let player = this.players.get(this.currentTurnColor)!;
-                    
+
                     player.discardedCards.putCardOnTop(command.data);
                     player.savedCards.removeFirstCardOfType(command.data);
                 }
@@ -48,7 +75,7 @@ export class Game {
 
                 this.currentDrawnCard = undefined;
                 break;
-            case GameCommandType.SAVE_CARD:
+            case GameCommandType.SAVE_DRAWN_CARD:
                 this.players.get(this.currentTurnColor)!
                     .savedCards.putCardOnTop(command.data);
 
@@ -61,9 +88,6 @@ export class Game {
                 break;
             case GameCommandType.START_TURN:
                 this.currentTurnColor = flipColor(this.currentTurnColor);
-                this.changePhase(TurnPhase.preroll);
-                break;
-            case GameCommandType.START_GAME:
                 this.changePhase(TurnPhase.preroll);
                 break;
         }
@@ -88,5 +112,52 @@ export class Game {
 
     getPositionOfPlayer(color: CounterColor): number {
         return this.players.get(color)!.position;
+    }
+
+    restoreCards() {
+        if (this.currentDrawnCard?.active) {
+            this.currentDrawnCard!.restore();
+        }
+
+        this.players.get(CounterColor.green)!.activeCards.restoreCards();
+        this.players.get(CounterColor.yellow)!.activeCards.restoreCards();
+    }
+
+    static fromJson(json: any): Game {
+        let game: Game = new Game(json.gameId);
+        game.players.set(CounterColor.green, Player.fromJson(json.players[0]));
+        game.players.set(CounterColor.yellow, Player.fromJson(json.players[1]));
+
+        game.currentTurnColor = json.currentTurnColor;
+        game.currentPhase = json.currentPhase;
+        game.hasStarted = json.hasStarted;
+        game.isHost = json.isHost;
+        game.numUpdates = json.numUpdates;
+        game.isRemote = json.isRemote;
+        game.gameId = json.gameId;
+
+        if (json.currentDrawnCard) {
+            game.currentDrawnCard = CardFactory.getCard(json.currentDrawnCard.cardType);
+            game.currentDrawnCard.fromJson(json.currentDrawnCard);
+        }
+
+        return game;
+    }
+
+    toJson(): any {
+        return {
+            players: [
+                this.players.get(CounterColor.green)!.toJson(),
+                this.players.get(CounterColor.yellow)!.toJson(),
+            ],
+            currentTurnColor: this.currentTurnColor,
+            currentPhase: this.currentPhase,
+            currentDrawnCard: this.currentDrawnCard?.toJson(),
+            hasStarted: this.hasStarted,
+            isHost: this.isHost,
+            numUpdates: this.numUpdates,
+            isRemote: this.isRemote,
+            gameId: this.gameId
+        }
     }
 }

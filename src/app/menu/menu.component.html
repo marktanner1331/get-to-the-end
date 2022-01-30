@@ -1,3 +1,12 @@
 <h1>Get To The End</h1>
-<h2>New Game</h2>
-<span class="button" (click)="onNewGameClick(Difficulty.EASY)">Easy</span>
+
+<ng-container *ngIf="hasCurrentGame()">
+    <h2>Continue Game</h2>
+    <span class="button" (click)="onContinueGameClick()">Continue</span>
+</ng-container>
+<ng-container *ngIf="!hasCurrentGame()">
+    <h2>New Game</h2>
+    <span class="button" (click)="onNewGameClick(Difficulty.EASY)">Easy</span>
+</ng-container>
+<h2>Multiplayer Game</h2>
+<span class="button" (click)="onNewMultiplayerGameClick()">Create New</span>

@@ -18,7 +18,8 @@ export class GameOverComponent implements OnInit {
 
   processCommand(command: GameCommand) {
     if(command.type == GameCommandType.GAME_COMPLETE) {
-      if(this.currentGameService.currentGame.players.get(command.data)!.name == "us") {
+      
+      if(command.data == this.currentGameService.getOurColor()) {
         this.display = true;
         this.description = "Congratulations, you won!";
       } else {

@@ -67,7 +67,7 @@ export class CardViewerComponent implements OnInit {
   saveForLater() {
     let temp = this.card!;
     this.close();
-    this.currentGameService.saveCard(temp);
+    this.currentGameService.saveDrawnCard();
   }
 
   ok() {

@@ -15,4 +15,27 @@ export class Player {
         this.name = name;
         this.deck = deck;
     }
+
+    static fromJson(json: any): Player {
+        let player: Player = new Player(json.color, json.name, Deck.fromJson(json.deck));
+
+        player.position = json.position;
+        player.savedCards = Deck.fromJson(json.savedCards);
+        player.discardedCards = Deck.fromJson(json.discardedCards);
+        player.activeCards = Deck.fromJson(json.activeCards);
+
+        return player;
+    }
+
+    toJson() {
+        return {
+            position: this.position,
+            color: this.color,
+            name: this.name,
+            deck: this.deck.toJson(),
+            savedCards: this.savedCards.toJson(),
+            discardedCards: this.discardedCards.toJson(),
+            activeCards: this.activeCards.toJson()
+        };
+    }
 }

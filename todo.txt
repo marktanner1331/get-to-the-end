@@ -1,6 +1,6 @@
 current game
     save
 
-deck
-    serialization
-
+game closed during a card doing it's thing
+    i.e. moving a counter
+    may need to temporarily store these cards to the "active cards" deck

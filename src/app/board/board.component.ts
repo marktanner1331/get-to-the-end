@@ -20,14 +20,12 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(private el: ElementRef, private resizeService: ResizeService, private currentGameService: CurrentGameService) {
     currentGameService.postProcess.push(x => this.processCommand(x));
+    this.greenCounterPos = currentGameService.currentGame.getPositionOfPlayer(CounterColor.green);
+    this.yellowCounterPos = currentGameService.currentGame.getPositionOfPlayer(CounterColor.yellow);
   }
 
   ngAfterViewInit(): void {
     this.resetCounterPositions();
-
-    setTimeout(() => {
-      this.currentGameService.startGame();
-    }, 100);
   }
 
   ngOnInit() {

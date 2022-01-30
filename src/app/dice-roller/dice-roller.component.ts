@@ -1,6 +1,7 @@
 import { Component, HostBinding, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DiceRollerService } from './dice-roller.service';
+import { GameCommand, GameCommandType } from '../models/game-command';
+import { CurrentGameService } from '../services/current-game.service';
 
 @Component({
   selector: 'app-dice-roller',
@@ -11,8 +12,18 @@ export class DiceRollerComponent implements OnInit {
   public rolling: boolean = false;
   public value: number = 0;
 
-  constructor(private diceRollerService: DiceRollerService) {
-    this.diceRollerService.diceRollercomponent = this;
+  constructor(private currentGameService: CurrentGameService) {
+    currentGameService.postProcess.push(x => this.processCommand(x));
+  }
+
+  processCommand(command: GameCommand) {
+    if (command.type == GameCommandType.ROLLING) {
+      let value = Math.floor(this.currentGameService.currentGame.nextRand() * 6) + 1;
+
+      this.startRolling(value, 600).subscribe(() => {
+        this.currentGameService.processCommand(new GameCommand(GameCommandType.ROLLED, this.value));
+      });
+    }
   }
 
   ngOnInit(): void {
@@ -73,13 +84,13 @@ export class DiceRollerComponent implements OnInit {
     return array;
   }
 
-  startRolling(value: number, rollDurationMS: number):Observable<any> {
+  startRolling(value: number, rollDurationMS: number): Observable<any> {
     return new Observable(x => {
       this.value = value;
 
       this.shuffle(this.imageArray);
       this.rolling = true;
-      
+
       setTimeout(() => {
         this.rolling = false;
         x.next();
