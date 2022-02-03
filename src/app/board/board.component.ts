@@ -40,7 +40,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   processCommand(command: GameCommand) {
     if (command.type == GameCommandType.ROLLED || command.type == GameCommandType.MOVE_COUNTER) {
-      this.currentGameService.processCommand(new GameCommand(
+      this.currentGameService.pushCommand(new GameCommand(
         GameCommandType.MOVING,
         this.currentGameService.currentGame.currentTurnColor
       ));
@@ -69,7 +69,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
             this.resetCounterPositions();
           } else {
             subscription.unsubscribe();
-            this.currentGameService.processCommand(new GameCommand(
+            this.currentGameService.pushCommand(new GameCommand(
               GameCommandType.MOVED,
               this.currentGameService.currentGame.currentTurnColor
             ));
@@ -88,10 +88,11 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
     //let's calculate the real image bounds
     let getImageRect = function (board: HTMLElement): DOMRect {
       let imageRect: DOMRect = board.getBoundingClientRect();
+
       if (imageRect.width > imageRect.height) {
         imageRect = new DOMRect(
           //imageRect.x + (imageRect.width - imageRect.height) / 2,
-          0,
+          5,
           imageRect.y,
           imageRect.height,
           imageRect.height
@@ -99,7 +100,7 @@ export class BoardComponent implements OnInit, OnDestroy, AfterViewInit {
       } else {
         imageRect = new DOMRect(
           //imageRect.x,
-          0,
+          5,
           imageRect.y + (imageRect.height - imageRect.width) / 2,
           imageRect.width,
           imageRect.width

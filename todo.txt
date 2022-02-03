@@ -1,6 +1,23 @@
-current game
-    save
+current game component
+    need a proper setGame() method that initializes the state of all fields
 
-game closed during a card doing it's thing
-    i.e. moving a counter
-    may need to temporarily store these cards to the "active cards" deck
+trap cards
+
+multiple local games
+
+on game complete, need to cleanup local storage
+
+bug in using saved cards
+    used teh wrong one, but consumed teh right one
+
+resurrecting draw deck seems to also resurrect the card itself
+
+bug where opponent's saved card prompts twice
+
+deck viewer
+    hide 'use' button if not on saved cards
+
+current game service
+    not sure if i still need suspendEndTurn
+
+    need to unwrap idleCounter

@@ -2,11 +2,11 @@
     <div id="blocker"></div>
     <div id="main">
         <div id="header">
-            <h2>Saved Cards</h2>
+            <h2>{{headerValue}}</h2>
             <div class="button" id="closeButton" (click)="close()">X</div>
         </div>
         <div id="cardContainer">
-            <app-deck-viewer-card [card]="card" (use)="useCard($event)" *ngFor="let card of deck!.cards"></app-deck-viewer-card>
+            <app-deck-viewer-card [type]="deck!.deckType" [card]="card" (use)="useCard($event)" *ngFor="let card of deck!.cards"></app-deck-viewer-card>
         </div>
     </div>
 </ng-container>

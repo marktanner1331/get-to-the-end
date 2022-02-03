@@ -19,7 +19,7 @@ export class ControlPanelComponent implements OnInit {
   drawDeckLength: number = 0;
 
   constructor(public currentGameService: CurrentGameService) {
-    currentGameService.idle.subscribe(() => this.refresh());
+    currentGameService.idle.push(() => this.refresh());
     //currentGameService.command.subscribe(x => this.processCommand(x));
   }
 
@@ -36,16 +36,22 @@ export class ControlPanelComponent implements OnInit {
     //in case it's not our turn
     this.numActiveCards = 0;
     
-    console.log("refreshing control panel, is our turn? " + this.currentGameService.isOurTurn());
-    if (!this.currentGameService.isOurTurn()) {
+    console.log("refreshing control panel, is our turn? " + this.currentGameService.IsHostsTurn());
+    if (!this.currentGameService.IsHostsTurn()) {
+      return;
+    }
+
+    let phase = this.currentGameService.currentGame.currentPhase;
+
+    if(phase == TurnPhase.postdraw) {
+      this.currentGameService.endTurn();
       return;
     }
 
     let player: Player = this.currentGameService.getCurrentPlayer();
     this.numActiveCards = player.activeCards.length;
     this.drawDeckLength = player.deck.length;
-
-    let phase = this.currentGameService.currentGame.currentPhase;
+    
     if(phase == TurnPhase.preroll) {
       this.canRoll = true;
       let hasSaved = this.currentGameService.getCurrentPlayer().savedCards.length > 0;

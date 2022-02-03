@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Card, CardType, Deck } from '../models/deck';
+import { Card, CardType, Deck, DeckType } from '../models/deck';
 
 @Component({
   selector: 'app-deck-viewer-card',
@@ -11,6 +11,8 @@ export class DeckViewerCardComponent implements OnInit {
   title: string = "";
   description: string = "";
 
+  showUseButton: boolean = false;
+
   @Output() use: EventEmitter<Card> = new EventEmitter();
 
   @Input() set card(value: Card) {
@@ -18,6 +20,17 @@ export class DeckViewerCardComponent implements OnInit {
 
     this.title = value.title;
     this.description = value.description;
+  }
+
+  @Input() set type(value: DeckType) {
+    switch(value) {
+      case DeckType.saved:
+        this.showUseButton = true;
+        break;
+      default:
+        this.showUseButton = false;
+        break;
+    }
   }
 
   constructor() { }

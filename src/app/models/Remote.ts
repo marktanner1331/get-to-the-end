@@ -22,9 +22,9 @@ export class Remote {
     init() {
         this.currentGameService = AppInjector.get(CurrentGameService);
 
-        this.currentGameService.idle.subscribe(() => {
-            console.log("remote idle, our turn? " + this.currentGameService.isOurTurn());
-            if (!this.currentGameService.isOurTurn()) {
+        this.currentGameService.idle.push(() => {
+            console.log("remote idle, our turn? " + this.currentGameService.IsHostsTurn());
+            if (!this.currentGameService.IsHostsTurn()) {
                 if(this.commandQueue.length) {
                     this.processRemoteCommand(this.commandQueue.shift()!);
                 } else {
@@ -48,26 +48,6 @@ export class Remote {
                 this.processRemoteCommand(this.commandQueue.shift()!);
             }
         })
-    }
-
-    joinRemoteGame(gameId: string): Observable<void> {
-        this.currentGameService = AppInjector.get(CurrentGameService);
-
-        return this.httpClient.get<string[]>(this.apiBase + `api/game?skip=0&gameid=${gameId}`)
-            .pipe(tap(x => {
-                if (!x.length) {
-                    throw new Error("no game found to join");
-                }
-
-                let command = GameCommand.fromJson(JSON.parse(x[0]));
-                if (command.type != GameCommandType.START_GAME) {
-                    throw new Error("first command is not a START_GAME");
-                }
-
-                this.processRemoteCommand(command);
-                this.currentGameService.currentGame.numUpdates++;
-            }))
-            .pipe(map(() => { }));
     }
 
     checkForUpdates(): Observable<void> {
@@ -99,11 +79,6 @@ export class Remote {
         console.log("Processing remote command: " + command.toString());
 
         switch (command.type) {
-            case GameCommandType.START_GAME:
-                let game: Game = Game.fromJson(command.data);
-                game.isHost = false;
-                this.currentGameService.currentGame = game;
-                break;
             case GameCommandType.ROLLING:
                 this.currentGameService.roll();
                 break;
@@ -144,7 +119,7 @@ export class Remote {
             return;
         }
 
-        if (this.currentGameService.isOurTurn()) {
+        if (this.currentGameService.IsHostsTurn()) {
             switch (command.type) {
                 case GameCommandType.ROLLING:
                     this.sendCommand(command);

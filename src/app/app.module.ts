@@ -15,6 +15,7 @@ import { GameOverComponent } from './game-over/game-over.component';
 import { MenuComponent } from './menu/menu.component';
 import { JoinComponent } from './join/join.component';
 import { JoinLinkComponent } from './join-link/join-link.component';
+import { ClipboardModule } from 'ngx-clipboard';
 
 export let AppInjector: Injector;
 
@@ -36,7 +37,8 @@ export let AppInjector: Injector;
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    ClipboardModule
   ],
   providers: [],
   bootstrap: [AppComponent]

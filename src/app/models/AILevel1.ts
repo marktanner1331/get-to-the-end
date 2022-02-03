@@ -6,15 +6,17 @@ import { TurnPhase } from "./TurnPhase";
 
 export class AILevel1 {
     init() {
-        AppInjector.get(CurrentGameService).idle.subscribe(() => this.refresh());
+        AppInjector.get(CurrentGameService).idle.push(() => this.refresh());
     }
 
     refresh() {
+        console.log("ai.refresh()");
+
         let gameService = AppInjector.get(CurrentGameService);
 
         //'our' refers to the real player
         //todo: rename it to something more description
-        if (gameService.isOurTurn()) {
+        if (gameService.IsHostsTurn()) {
             return;
         }
 
@@ -36,6 +38,9 @@ export class AILevel1 {
         } else if (phase == TurnPhase.drawn) {
             console.log("ai using drawn card");
             gameService.useDrawnCard();
+        } else if(phase == TurnPhase.postdraw) {
+            console.log("AI ending turn");
+            gameService.endTurn();
         }
     }
 }

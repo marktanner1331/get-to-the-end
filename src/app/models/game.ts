@@ -74,6 +74,7 @@ export class Game {
                     .discardedCards.putCardOnTop(command.data);
 
                 this.currentDrawnCard = undefined;
+                this.changePhase(TurnPhase.postdraw);
                 break;
             case GameCommandType.SAVE_DRAWN_CARD:
                 this.players.get(this.currentTurnColor)!
@@ -81,6 +82,7 @@ export class Game {
 
                 if (this.currentPhase == TurnPhase.drawn) {
                     this.currentDrawnCard = undefined;
+                    this.changePhase(TurnPhase.postdraw);
                 }
                 break;
             case GameCommandType.END_TURN:

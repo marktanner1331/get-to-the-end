@@ -10,6 +10,7 @@
 #cardContainer {
     display: flex;
     flex-wrap: wrap;
+    overflow-y: auto;
 }
 
 #main {
@@ -21,6 +22,8 @@
     height: 80%;
     transform: translate(-50%, -50%);
     border: 2px solid black;
+    display: flex;
+    flex-flow: column;
 }
 
 #closeButton {
@@ -45,4 +48,5 @@ h2 {
 app-deck-viewer-card {
     margin: 5px;
     width: calc(25% - 10px);
+    min-width: 150px;
 }

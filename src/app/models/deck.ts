@@ -5,6 +5,7 @@ import { CounterColor, flipColor } from "./counter-color";
 import { GameCommand, GameCommandType } from "./game-command";
 import { TurnPhase } from "./TurnPhase";
 import { Player } from "./player";
+import { Game } from "./game";
 
 export class Deck {
     cards: Card[];
@@ -14,7 +15,7 @@ export class Deck {
             this.cards = cards;
         } else {
             this.cards = CardFactory.cardTypes().map(x => CardFactory.getCard(x));
-            Deck.shuffleArray(this.cards);
+            this.shuffleArray(this.cards);
         }
     }
 
@@ -72,13 +73,12 @@ export class Deck {
         };
     }
 
-    private static shuffleArray(array: any[]) {
-        //todo maybe able to optimize
-        //instead of having to send through the whole decks in START_GAME
-        //we only need to send through a game id
-        //and everything else can be generated from that
+    private shuffleArray(array: any[]) {
+        let currentGameService: CurrentGameService = AppInjector.get(CurrentGameService);
+        let currentGame: Game = currentGameService.currentGame;
+
         for (var i = array.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
+            var j = Math.floor(currentGame.nextRand() * (i + 1));
             var temp = array[i];
             array[i] = array[j];
             array[j] = temp;
@@ -193,7 +193,7 @@ class ExtraRoll extends Card {
                 currentGameService.currentGame.changePhase(this.tempPhase);
 
                 _.remove(currentGameService.postProcess, x => x == callback);
-                currentGameService.cardUsed();
+                currentGameService.cardUsed(this.cardType);
             }
         };
 
@@ -234,25 +234,30 @@ class Draw2 extends Card {
     }
 
     restore() {
-        let callback = (command: GameCommand) => {
+        let postCallback = (command: GameCommand) => {
             switch (command.type) {
                 case GameCommandType.CARD_USED:
                 case GameCommandType.SAVE_DRAWN_CARD:
+                    //todo need to fix this for using as a saved card
+                    //i.e. restore the state back to preroll
+
                     this.numCardsDrawn++;
+                    currentGameService.currentGame.changePhase(TurnPhase.predraw);
 
                     if (this.numCardsDrawn == 2) {
-                        currentGameService.currentGame.changePhase(TurnPhase.drawn);
+                        currentGameService.currentGame.changePhase(TurnPhase.postdraw);
 
-                        _.remove(currentGameService.postProcess, x => x == callback);
+                        _.remove(currentGameService.postProcess, x => x == postCallback);
                         this.player.activeCards.removeFirstCardOfType(CardType.draw2);
-                    } else {
-                        currentGameService.currentGame.changePhase(TurnPhase.predraw);
+                        currentGameService.suspendEndTurn = false;
+                        currentGameService.cardUsed(this.cardType);
                     }
             }
         };
 
         let currentGameService = AppInjector.get(CurrentGameService);
-        currentGameService.postProcess.push(callback);
+        currentGameService.postProcess.push(postCallback);
+        currentGameService.suspendEndTurn = true;
     }
 
     action(): void {
@@ -263,12 +268,6 @@ class Draw2 extends Card {
         this.player.activeCards.putCardOnTop(this);
         currentGameService.currentGame.changePhase(TurnPhase.predraw);
 
-        currentGameService.cardUsed();
-
-        //we add the callback after we have used the card
-        //otherwise the command will come through in the above callback
-        //we can still gaurentee that the callback will be hooked up before the idle notification fires
-        //as that is async
         this.restore();
     }
 
@@ -308,7 +307,7 @@ class DoubleDice extends Card {
         this.restore();
 
         this.player.activeCards.putCardOnTop(this);
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(this.cardType);
     }
 
     restore(): void {
@@ -363,7 +362,7 @@ class DieDoesNothing extends Card {
         this.player.activeCards.putCardOnTop(this);
         this.restore();
 
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(this.cardType);
     }
 
     restore(): void {
@@ -420,7 +419,7 @@ class DoubleDice3 extends Card {
         this.restore();
 
         this.player.activeCards.putCardOnTop(this);
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(this.cardType);
     }
 
     restore(): void {
@@ -479,7 +478,7 @@ class BrokenTeleporter extends Card {
         let location = Math.floor(currentGameService.currentGame.nextRand() * 99);
         currentGameService.teleportCounter(currentGameService.currentGame.currentTurnColor, location);
 
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(this.cardType);
     }
     restore(): void {
     }
@@ -497,10 +496,84 @@ class BrokenTeleporterForOpponent extends Card {
         let location = Math.floor(currentGameService.currentGame.nextRand() * 99);
         currentGameService.teleportCounter(flipColor(currentGameService.currentGame.currentTurnColor), location);
 
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(this.cardType);
     }
 
     restore(): void {
+    }
+}
+
+class MoveUs extends Card {
+    constructor(cardType: CardType, title: string, description: string, private amount: number) {
+        super(cardType, title, description);
+    }
+
+    action(): void {
+        let currentGameService = AppInjector.get(CurrentGameService);
+
+        let callback = (command: GameCommand) => {
+            if (command.type == GameCommandType.MOVED) {
+                _.remove(currentGameService.postProcess, x => x == callback);
+                player.activeCards.removeFirstCardOfType(CardType.doubleDice);
+                currentGameService.cardUsed(this.cardType);
+            }
+        };
+
+        currentGameService.postProcess.push(callback);
+
+        let player = currentGameService.getCurrentPlayer();
+        player.activeCards.putCardOnTop(this);
+
+        currentGameService.moveCounterByAmount(currentGameService.currentGame.currentTurnColor, this.amount);
+    }
+
+    restore(): void {
+        //if we are restoring here it means that the game was closed mid way though the counter moving
+        //so the game is already updated with the new position
+        //all we have to do is fire the cardUsed() to end the turn and clean up the active deck
+        let currentGameService = AppInjector.get(CurrentGameService);
+
+        let player = currentGameService.getCurrentPlayer();
+        player.activeCards.removeFirstCardOfType(CardType.doubleDice);
+
+        currentGameService.cardUsed(this.cardType);
+    }
+}
+
+class MoveThem extends Card {
+    constructor(cardType: CardType, title: string, description: string, private amount: number) {
+        super(cardType, title, description);
+    }
+
+    action(): void {
+        let currentGameService = AppInjector.get(CurrentGameService);
+
+        let callback = (command: GameCommand) => {
+            if (command.type == GameCommandType.MOVED) {
+                _.remove(currentGameService.postProcess, x => x == callback);
+                player.activeCards.removeFirstCardOfType(CardType.doubleDice);
+                currentGameService.cardUsed(this.cardType);
+            }
+        };
+
+        currentGameService.postProcess.push(callback);
+
+        let player = currentGameService.getCurrentPlayer();
+        player.activeCards.putCardOnTop(this);
+
+        currentGameService.moveCounterByAmount(flipColor(currentGameService.currentGame.currentTurnColor), this.amount);
+    }
+
+    restore(): void {
+        //if we are restoring here it means that the game was closed mid way though the counter moving
+        //so the game is already updated with the new position
+        //all we have to do is fire the cardUsed() to end the turn and clean up the active deck
+        let currentGameService = AppInjector.get(CurrentGameService);
+
+        let player = currentGameService.getCurrentPlayer();
+        player.activeCards.removeFirstCardOfType(CardType.doubleDice);
+
+        currentGameService.cardUsed(this.cardType);
     }
 }
 
@@ -514,25 +587,25 @@ export class CardFactory {
     static getCard(cardType: CardType): Card {
         switch (cardType) {
             case CardType.forward1:
-                return new TransientCard(
+                return new MoveUs(
                     CardType.forward1,
                     "Forward 1",
                     "Move Forward 1 square.",
-                    () => this.moveUs(1)
+                    1
                 );
             case CardType.forward3:
-                return new TransientCard(
+                return new MoveUs(
                     CardType.forward3,
                     "Forward 3",
                     "Move Forward 3 squares.",
-                    () => this.moveUs(3)
+                    3
                 );
             case CardType.forward5:
-                return new TransientCard(
+                return new MoveUs(
                     CardType.forward5,
                     "Forward 5",
                     "Move Forward 5 squares.",
-                    () => this.moveUs(5)
+                    5
                 );
             case CardType.nothing:
                 return new TransientCard(
@@ -542,25 +615,25 @@ export class CardFactory {
                     () => this.nothing()
                 );
             case CardType.back1:
-                return new TransientCard(
+                return new MoveThem(
                     CardType.back1,
                     "Opponent back 1",
                     "Move our opponent back 1 square.",
-                    () => this.moveThem(-1)
+                    -1
                 );
             case CardType.back3:
-                return new TransientCard(
+                return new MoveThem(
                     CardType.back3,
                     "Opponent back 3",
                     "Move our opponent back 3 squares.",
-                    () => this.moveThem(-3)
+                    -3
                 );
             case CardType.back5:
-                return new TransientCard(
+                return new MoveThem(
                     CardType.back5,
                     "Opponent back 5",
                     "Move our opponent back 5 squares.",
-                    () => this.moveThem(-5)
+                    -5
                 );
             case CardType.draw2:
                 return new Draw2();
@@ -620,7 +693,7 @@ export class CardFactory {
         let player: Player = currentGameService.getCurrentPlayer();
 
         player.deck.cards = player.discardedCards.cards.concat(player.deck.cards);
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(CardType.resurrectAll);
     }
 
     private static swapPositions() {
@@ -632,41 +705,11 @@ export class CardFactory {
         currentGameService.teleportCounter(CounterColor.green, yellowPlayerPos);
         currentGameService.teleportCounter(CounterColor.yellow, greenPlayerPos);
 
-        currentGameService.cardUsed();
+        currentGameService.cardUsed(CardType.swapPositions);
     }
 
     private static nothing() {
         let currentGameService = AppInjector.get(CurrentGameService);
-        currentGameService.cardUsed();
-    }
-
-    private static moveThem(amount: number) {
-        let currentGameService = AppInjector.get(CurrentGameService);
-
-        let callback = (command: GameCommand) => {
-            if (command.type == GameCommandType.MOVED) {
-                _.remove(currentGameService.postProcess, x => x == callback);
-                currentGameService.cardUsed();
-            }
-        };
-
-        currentGameService.postProcess.push(callback);
-
-        currentGameService.moveCounterByAmount(flipColor(currentGameService.currentGame.currentTurnColor), amount);
-    }
-
-    private static moveUs(amount: number) {
-        let currentGameService = AppInjector.get(CurrentGameService);
-
-        let callback = (command: GameCommand) => {
-            if (command.type == GameCommandType.MOVED) {
-                _.remove(currentGameService.postProcess, x => x == callback);
-                currentGameService.cardUsed();
-            }
-        };
-
-        currentGameService.postProcess.push(callback);
-
-        currentGameService.moveCounterByAmount(currentGameService.currentGame.currentTurnColor, amount);
+        currentGameService.cardUsed(CardType.nothing);
     }
 }

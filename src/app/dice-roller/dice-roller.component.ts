@@ -21,7 +21,7 @@ export class DiceRollerComponent implements OnInit {
       let value = Math.floor(this.currentGameService.currentGame.nextRand() * 6) + 1;
 
       this.startRolling(value, 600).subscribe(() => {
-        this.currentGameService.processCommand(new GameCommand(GameCommandType.ROLLED, this.value));
+        this.currentGameService.pushCommand(new GameCommand(GameCommandType.ROLLED, this.value));
       });
     }
   }

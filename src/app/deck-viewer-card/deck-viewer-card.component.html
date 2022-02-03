@@ -1,5 +1,5 @@
 <div id="title">{{title}}</div>
 <div id="descriptionHolder">
     <div id="description">{{description}}</div>
-    <button class="button" (click)="useNow()">Use</button>
+    <button *ngIf="showUseButton" class="button" (click)="useNow()">Use</button>
 </div>

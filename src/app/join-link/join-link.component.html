@@ -6,7 +6,8 @@
             <div class="button" id="closeButton" (click)="close()">X</div>
         </div>
         <div id="linkContainer">
-            <a href="{{link}}">{{link}}</a>
+            <input type="text" #inputTarget value="{{link}}" />
+            <button [ngxClipboard]="inputTarget">Copy</button>
         </div>
     </div>
 </ng-container>
