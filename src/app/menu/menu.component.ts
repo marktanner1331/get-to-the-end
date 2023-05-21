@@ -23,24 +23,8 @@ export class MenuComponent implements OnInit {
   }
 
 
-  onNewGameClick(difficulty:Difficulty):void {
-    this.currentGameService.reset();
-    this.currentGameService.currentGame = new Game(Guid.create().toString());
-    this.currentGameService.currentGame.players.set(CounterColor.green, new Player(CounterColor.green, "us", new Deck(DeckType.unused)));
-    this.currentGameService.currentGame.players.set(CounterColor.yellow, new Player(CounterColor.yellow, "them", new Deck(DeckType.unused)));
-
-    this.router.navigateByUrl("/game");
-  }
-
-  onNewMultiplayerGameClick() {
-    this.currentGameService.reset();
-    this.currentGameService.currentGame = new Game(Guid.create().toString());
-    this.currentGameService.currentGame.players.set(CounterColor.green, new Player(CounterColor.green, "us", new Deck(DeckType.unused)));
-    this.currentGameService.currentGame.players.set(CounterColor.yellow, new Player(CounterColor.yellow, "them", new Deck(DeckType.unused)));
-
-    this.currentGameService.currentGame.isRemote = true;
-
-    this.router.navigateByUrl("/game");
+  onNewGameClick():void {
+    this.router.navigateByUrl("/new-game");
   }
 
   listAllExistingGames() : Game[] {

@@ -22,8 +22,13 @@ export class CurrentGameService {
   remote: Remote = new Remote();
   saver: Saver = new Saver();
 
+  // When the idle counter is at 0, the ui can unfreeze and 
+  // receive input from the user
+  // for example, when the dice are currently rolling, the idle counter is incremented
+  // when the roll has finished, it decrements
   idleCounter: number = 0;
 
+  // a list of callbacks that are called when the idle counter hits 0
   idle: (() => void)[] = [];
 
   preProcess: ((command: GameCommand) => void)[] = [];

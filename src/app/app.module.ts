@@ -16,6 +16,7 @@ import { MenuComponent } from './menu/menu.component';
 import { JoinComponent } from './join/join.component';
 import { JoinLinkComponent } from './join-link/join-link.component';
 import { ClipboardModule } from 'ngx-clipboard';
+import { NewGameMenuComponent } from './new-game-menu/new-game-menu.component';
 
 export let AppInjector: Injector;
 
@@ -32,7 +33,8 @@ export let AppInjector: Injector;
     GameOverComponent,
     MenuComponent,
     JoinComponent,
-    JoinLinkComponent
+    JoinLinkComponent,
+    NewGameMenuComponent
   ],
   imports: [
     BrowserModule,

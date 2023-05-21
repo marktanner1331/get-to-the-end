@@ -16,7 +16,7 @@ export class Deck {
         } else {
             this.cards = CardFactory.cardTypes().map(x => CardFactory.getCard(x));
             this.shuffleArray(this.cards);
-            this.cards.push(CardFactory.getCard(CardType.draw2));
+            //this.cards.push(CardFactory.getCard(CardType.draw2));
         }
     }
 
@@ -148,6 +148,11 @@ export abstract class Card {
     }
 }
 
+// transient cards are concrete classes
+// with very simple actions
+// that can be specified at construction time
+// e.g. the nothing card is a transient card
+// as it doesn't need a full subclass
 class TransientCard extends Card {
     constructor(public cardType: CardType, public title: string, public description: string, private _action: () => void) {
         super(cardType, title, description);
