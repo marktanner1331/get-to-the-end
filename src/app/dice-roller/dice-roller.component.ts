@@ -2,6 +2,7 @@ import { Component, HostBinding, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { GameCommand, GameCommandType } from '../models/game-command';
 import { CurrentGameService } from '../services/current-game.service';
+import { RandomService } from '../services/random.service';
 
 @Component({
   selector: 'app-dice-roller',
@@ -12,13 +13,13 @@ export class DiceRollerComponent implements OnInit {
   public rolling: boolean = false;
   public value: number = 0;
 
-  constructor(private currentGameService: CurrentGameService) {
+  constructor(private currentGameService: CurrentGameService, private randomService: RandomService) {
     currentGameService.postProcess.push(x => this.processCommand(x));
   }
 
   processCommand(command: GameCommand) {
     if (command.type == GameCommandType.ROLLING) {
-      let value = Math.floor(this.currentGameService.currentGame.nextRand() * 6) + 1;
+      let value = Math.floor(this.randomService.nextRand() * 6) + 1;
 
       this.startRolling(value, 600).subscribe(() => {
         this.currentGameService.pushCommand(new GameCommand(GameCommandType.ROLLED, this.value));

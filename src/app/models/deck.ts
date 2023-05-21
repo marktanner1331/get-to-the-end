@@ -6,6 +6,7 @@ import { GameCommand, GameCommandType } from "./game-command";
 import { TurnPhase } from "./TurnPhase";
 import { Player } from "./player";
 import { Game } from "./game";
+import { RandomService } from "../services/random.service";
 
 export class Deck {
     cards: Card[];
@@ -15,7 +16,8 @@ export class Deck {
             this.cards = cards;
         } else {
             this.cards = CardFactory.cardTypes().map(x => CardFactory.getCard(x));
-            this.shuffleArray(this.cards);
+            const random: RandomService = AppInjector.get(RandomService);
+            random.shuffle(this.cards);
             //this.cards.push(CardFactory.getCard(CardType.draw2));
         }
     }
@@ -76,18 +78,6 @@ export class Deck {
             deckType: this.deckType,
             cards: this.cards.map(x => x.toJson())
         };
-    }
-
-    private shuffleArray(array: any[]) {
-        let currentGameService: CurrentGameService = AppInjector.get(CurrentGameService);
-        let currentGame: Game = currentGameService.currentGame;
-
-        for (var i = array.length - 1; i > 0; i--) {
-            var j = Math.floor(currentGame.nextRand() * (i + 1));
-            var temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-        }
     }
 }
 
@@ -480,9 +470,9 @@ class BrokenTeleporter extends Card {
 
     action(): void {
         let currentGameService = AppInjector.get(CurrentGameService);
+        const random: RandomService = AppInjector.get(RandomService);
 
-        //don't want to be able to teleport to 99
-        let location = Math.floor(currentGameService.currentGame.nextRand() * 99);
+        let location = Math.floor(random.nextRand() * 99);
         currentGameService.teleportCounter(currentGameService.currentGame.currentTurnColor, location);
 
         currentGameService.cardUsed(this.cardType);
@@ -498,9 +488,9 @@ class BrokenTeleporterForOpponent extends Card {
 
     action(): void {
         let currentGameService = AppInjector.get(CurrentGameService);
+        const random: RandomService = AppInjector.get(RandomService);
 
-        //don't want to be able to teleport to 99
-        let location = Math.floor(currentGameService.currentGame.nextRand() * 99);
+        let location = Math.floor(random.nextRand() * 99);
         currentGameService.teleportCounter(flipColor(currentGameService.currentGame.currentTurnColor), location);
 
         currentGameService.cardUsed(this.cardType);
