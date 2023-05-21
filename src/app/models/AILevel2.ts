@@ -15,7 +15,7 @@ export class AILevel2 {
 
         //'our' refers to the real player
         //todo: rename it to something more description
-        if (gameService.IsHostsTurn()) {
+        if (gameService.IsOurTurn()) {
             return;
         }
 
@@ -26,7 +26,7 @@ export class AILevel2 {
                 let savedCard: Card | null = this.useSavedCard();
                 if (savedCard) {
                     console.log("ai using saved card");
-                    gameService.useSavedCard(savedCard);
+                    gameService.useSavedCard(savedCard.cardType);
                 } else {
                     console.log("ai rolling");
                     gameService.roll();

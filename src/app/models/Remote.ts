@@ -23,10 +23,12 @@ export class Remote {
         this.currentGameService = AppInjector.get(CurrentGameService);
 
         this.currentGameService.idle.push(() => {
-            console.log("remote idle, our turn? " + this.currentGameService.IsHostsTurn());
-            if (!this.currentGameService.IsHostsTurn()) {
+            console.log("remote idle, our turn? " + this.currentGameService.IsOurTurn());
+            if (!this.currentGameService.IsOurTurn()) {
                 if(this.commandQueue.length) {
                     this.processRemoteCommand(this.commandQueue.shift()!);
+                } else if(this.currentGameService.currentGame.currentPhase == TurnPhase.postdraw) {
+                    this.currentGameService.endTurn();
                 } else {
                     this.checkForUpdatesLooped();
                 }
@@ -100,8 +102,7 @@ export class Remote {
     }
 
     processCommand(command: GameCommand) {
-        console.log(this.currentGameService.idleCounter);
-        if(command.type == GameCommandType.ROLLING && this.currentGameService.idleCounter != 0) {
+        if(command.type == GameCommandType.ROLLING && this.currentGameService.currentGame.currentPhase != TurnPhase.preroll) {
             //we are probably in the middle of a card
             //the command hasn't been user initiated
             //so we don't to send it
@@ -111,15 +112,14 @@ export class Remote {
             return;
         }
 
-        console.log("processing command for remote: " + command.toString());
-
         if (command.type == GameCommandType.START_GAME) {
-            this.sendCommand(command);
             AppInjector.get(JoinLinkService).show();
             return;
         }
 
-        if (this.currentGameService.IsHostsTurn()) {
+        if (this.currentGameService.IsOurTurn()) {
+            console.log("processing command for remote: " + command.toString());
+
             switch (command.type) {
                 case GameCommandType.ROLLING:
                     this.sendCommand(command);

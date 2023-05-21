@@ -1,12 +1,44 @@
 <h1>Get To The End</h1>
-
-<ng-container *ngIf="hasCurrentGame()">
-    <h2>Continue Game</h2>
-    <span class="button" (click)="onContinueGameClick()">Continue</span>
-</ng-container>
-<ng-container *ngIf="!hasCurrentGame()">
-    <h2>New Game</h2>
+<div>
+    <h3>New Game</h3>
     <span class="button" (click)="onNewGameClick(Difficulty.EASY)">Easy</span>
-</ng-container>
-<h2>Multiplayer Game</h2>
-<span class="button" (click)="onNewMultiplayerGameClick()">Create New</span>
+    <span class="button" (click)="onNewGameClick(Difficulty.MEDIUM)">Medium</span>
+    <span class="button" (click)="onNewGameClick(Difficulty.HARD)">Hard</span>
+    <span class="button" (click)="onNewMultiplayerGameClick()">Multi Player</span>
+    <h3>Existing Games</h3>
+    <div>
+        <table>
+            <tr>
+                <th>
+                    Multi Player
+                </th>
+                <th>
+                    Our Position
+                </th>
+                <th>
+                    Their Position
+                </th>
+                <th>
+                    Our Turn?
+                </th>
+            </tr>
+            <tr *ngFor="let game of listAllExistingGames()">
+                <td>
+                    {{game.isRemote}}
+                </td>
+                <td>
+                    {{game.getOurPosition()}}
+                </td>
+                <td>
+                    {{game.getTheirPosition()}}
+                </td>
+                <td>
+                    {{game.isOurTurn()}}
+                </td>
+                <td>
+                    <span class="button" (click)="playExisting(game)">Play</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

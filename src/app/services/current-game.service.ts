@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import { AILevel1 } from '../models/AILevel1';
 import { AILevel2 } from '../models/AILevel2';
 import { CounterColor, flipColor } from '../models/counter-color';
-import { Card, CardType, Deck } from '../models/deck';
+import { Card, CardType, Deck, DeckType } from '../models/deck';
 import { Game } from '../models/game';
 import { GameCommand, GameCommandType } from '../models/game-command';
 import { Player } from '../models/player';
@@ -31,7 +31,6 @@ export class CurrentGameService {
 
   commandQueue: GameCommand[] = [];
   isProcessing: boolean = false;
-  suspendEndTurn: boolean = false;
 
   constructor() { }
 
@@ -42,7 +41,7 @@ export class CurrentGameService {
       this.AI.init();
     }
 
-    //this.saver.init();
+    this.saver.init();
 
     if (this.currentGame.hasStarted) {
       //i.e. from a saved game
@@ -60,14 +59,13 @@ export class CurrentGameService {
     this.postProcess = [];
     this.commandQueue = [];
     this.isProcessing = false;
-    this.suspendEndTurn = false;
   }
 
   restore() {
     this.currentGame.restoreCards();
 
     let needsNop = true;
-    if (this.IsHostsTurn()) {
+    if (this.IsOurTurn()) {
       if (this.currentGame.currentPhase == TurnPhase.drawn) {
         //we have drawn a card, so the idleCounter is at 1
         //let's restore that first
@@ -105,7 +103,7 @@ export class CurrentGameService {
     return Array.from(this.currentGame.players.values()).find(x => x.name == ourName)!.color;
   }
 
-  IsHostsTurn(): boolean {
+  IsOurTurn(): boolean {
     return this.currentGame.currentTurnColor == this.getOurColor();
   }
 
@@ -176,10 +174,6 @@ export class CurrentGameService {
             continue;
           }
           break;
-        case GameCommandType.USE_SAVED_CARD:
-        case GameCommandType.USE_DRAWN_CARD:
-          (command.data as Card).action();
-          break;
       }
 
       for (let callback of this.postProcess) {
@@ -209,28 +203,25 @@ export class CurrentGameService {
   }
 
   viewActiveCards() {
-    this.pushCommand(new GameCommand(GameCommandType.VIEW_CARDS, this.getCurrentPlayer().activeCards));
+    this.pushCommand(new GameCommand(GameCommandType.VIEW_CARDS, DeckType.active));
   }
 
   viewSavedCards() {
-    this.pushCommand(new GameCommand(GameCommandType.VIEW_CARDS, this.getCurrentPlayer().savedCards));
+    this.pushCommand(new GameCommand(GameCommandType.VIEW_CARDS, DeckType.saved));
   }
 
   saveDrawnCard() {
     this.pushCommand(new GameCommand(GameCommandType.SAVE_DRAWN_CARD, this.currentGame.currentDrawnCard!));
   }
 
-  useSavedCard(card: Card) {
-    console.log("useSavedCard()");
-    console.log(this.IsHostsTurn());
-    if (this.IsHostsTurn()) {
-      this.pushCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, card));
+  useSavedCard(cardType: CardType) {
+    if (this.IsOurTurn()) {
+      this.pushCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, cardType));
     } else {
-      this.pushCommand(new GameCommand(GameCommandType.SHOW_CARD, card));
+      this.pushCommand(new GameCommand(GameCommandType.SHOW_CARD, this.getCurrentPlayer().savedCards.getFirstCardOfType(cardType)));
       let callback = (command: GameCommand) => {
-        console.log("useSavedCard callback");
         if (command.type == GameCommandType.SHOWN_REMOTE_CARD) {
-          this.pushCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, card));
+          this.pushCommand(new GameCommand(GameCommandType.USE_SAVED_CARD, cardType));
           _.remove(this.postProcess, x => x == callback);
         }
       };
@@ -240,13 +231,13 @@ export class CurrentGameService {
   }
 
   useDrawnCard() {
-    if (this.IsHostsTurn()) {
-      this.pushCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD, this.currentGame.currentDrawnCard!));
+    if (this.IsOurTurn()) {
+      this.pushCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD));
     } else {
       this.pushCommand(new GameCommand(GameCommandType.SHOW_CARD, this.currentGame.currentDrawnCard!));
       let callback = (command: GameCommand) => {
         if (command.type == GameCommandType.SHOWN_REMOTE_CARD) {
-          this.pushCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD, this.currentGame.currentDrawnCard!));
+          this.pushCommand(new GameCommand(GameCommandType.USE_DRAWN_CARD));
 
           _.remove(this.postProcess, x => x == callback);
         };
@@ -257,7 +248,7 @@ export class CurrentGameService {
   }
 
   cardUsed(cardType: CardType) {
-    this.pushCommand(new GameCommand(GameCommandType.CARD_USED));
+    this.pushCommand(new GameCommand(GameCommandType.CARD_USED, cardType));
   }
 
   drawCard() {
@@ -266,10 +257,8 @@ export class CurrentGameService {
   }
 
   endTurn() {
-    if (!this.suspendEndTurn) {
-      this.pushCommand(new GameCommand(GameCommandType.END_TURN));
-      this.pushCommand(new GameCommand(GameCommandType.START_TURN));
-    }
+    this.pushCommand(new GameCommand(GameCommandType.END_TURN));
+    this.pushCommand(new GameCommand(GameCommandType.START_TURN));
   }
 
   roll() {

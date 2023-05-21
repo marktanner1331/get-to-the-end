@@ -36,8 +36,8 @@ export class ControlPanelComponent implements OnInit {
     //in case it's not our turn
     this.numActiveCards = 0;
     
-    console.log("refreshing control panel, is our turn? " + this.currentGameService.IsHostsTurn());
-    if (!this.currentGameService.IsHostsTurn()) {
+    console.log("refreshing control panel, is our turn? " + this.currentGameService.IsOurTurn());
+    if (!this.currentGameService.IsOurTurn()) {
       return;
     }
 

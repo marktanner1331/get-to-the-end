@@ -16,7 +16,7 @@ export class AILevel1 {
 
         //'our' refers to the real player
         //todo: rename it to something more description
-        if (gameService.IsHostsTurn()) {
+        if (gameService.IsOurTurn()) {
             return;
         }
 

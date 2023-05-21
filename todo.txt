@@ -1,23 +1,15 @@
-current game component
-    need a proper setGame() method that initializes the state of all fields
-
 trap cards
 
-multiple local games
+more ai
 
-on game complete, need to cleanup local storage
+join link button in game
 
-bug in using saved cards
-    used teh wrong one, but consumed teh right one
+proper backend
 
-resurrecting draw deck seems to also resurrect the card itself
+peer to peer connections
 
-bug where opponent's saved card prompts twice
+PWA
 
-deck viewer
-    hide 'use' button if not on saved cards
+push notifications
 
-current game service
-    not sure if i still need suspendEndTurn
-
-    need to unwrap idleCounter
+better styling and animation

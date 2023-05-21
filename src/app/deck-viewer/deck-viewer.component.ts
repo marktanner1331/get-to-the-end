@@ -22,25 +22,26 @@ export class DeckViewerComponent implements OnInit {
 
   useCard(card: Card) {
     this.display = false;
-    this.currentGameService.useSavedCard(card);
+    this.currentGameService.useSavedCard(card.cardType);
   }
 
   processCommand(command: GameCommand) {
     if (command.type == GameCommandType.VIEW_CARDS) {
-      this.deck = command.data;
-      console.log(DeckType[this.deck!.deckType]);
-      
-      switch (this.deck!.deckType) {
+      switch (command.data) {
         case DeckType.active:
+          this.deck = this.currentGameService.getCurrentPlayer().activeCards;
           this.headerValue = "Active Cards";
           break;
         case DeckType.saved:
+          this.deck = this.currentGameService.getCurrentPlayer().savedCards;
           this.headerValue = "Saved Cards";
           break;
         case DeckType.used:
+          this.deck = this.currentGameService.getCurrentPlayer().discardedCards;
           this.headerValue = "Used Cards";
           break;
         case DeckType.unused:
+          this.deck = this.currentGameService.getCurrentPlayer().deck;
           this.headerValue = "Unused Cards";
           break;
       }

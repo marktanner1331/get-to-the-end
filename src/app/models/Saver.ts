@@ -32,6 +32,29 @@ export class Saver {
         }
     }
 
+    static listAllGames(): Game[] {
+        return Object.keys(localStorage)
+        .map(x => localStorage.getItem(x)!)
+        .map(x => JSON.parse(x))
+        .map(x => Game.fromJson(x));
+    }
+
+    static listRemoteGames():Game[] {
+        return Object.keys(localStorage)
+        .filter(x => x.startsWith("remote_"))
+        .map(x => localStorage.getItem(x)!)
+        .map(x => JSON.parse(x))
+        .map(x => Game.fromJson(x));
+    }
+
+    static listLocalGames():Game[] {
+        return Object.keys(localStorage)
+        .filter(x => x.startsWith("remote_"))
+        .map(x => localStorage.getItem(x)!)
+        .map(x => JSON.parse(x))
+        .map(x => Game.fromJson(x));
+    }
+
     static hasCurrentGame(): boolean {
         return _.some(Object.keys(localStorage), x => x.startsWith("local_"));
     }

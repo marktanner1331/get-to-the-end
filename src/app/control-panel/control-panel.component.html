@@ -1,8 +1,8 @@
-<div *ngIf="currentGameService.IsHostsTurn()" id="header">
+<div *ngIf="currentGameService.IsOurTurn()" id="header">
     <span>Our Turn</span>
     <img #greenCounter class="counter" src="{{getCounterPath(currentGameService.getOurColor())}}" />
 </div>
-<div *ngIf="!currentGameService.IsHostsTurn()" id="header">
+<div *ngIf="!currentGameService.IsOurTurn()" id="header">
     <span>Opponents Turn</span>
     <img #greenCounter class="counter" src="{{getCounterPath(currentGameService.getTheirColor())}}" />
 </div>

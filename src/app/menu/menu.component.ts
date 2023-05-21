@@ -22,14 +22,6 @@ export class MenuComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  hasCurrentGame(): boolean {
-    return Saver.hasCurrentGame();
-  }
-
-  onContinueGameClick() {
-    this.currentGameService.currentGame = Saver.getCurrentGame();
-    this.router.navigateByUrl("/game");
-  }
 
   onNewGameClick(difficulty:Difficulty):void {
     this.currentGameService.reset();
@@ -48,6 +40,17 @@ export class MenuComponent implements OnInit {
 
     this.currentGameService.currentGame.isRemote = true;
 
+    this.router.navigateByUrl("/game");
+  }
+
+  listAllExistingGames() : Game[] {
+    return Saver.listAllGames();
+  }
+
+  playExisting(game: Game) {
+    this.currentGameService.reset();
+    this.currentGameService.currentGame = game;
+    
     this.router.navigateByUrl("/game");
   }
 }

@@ -64,18 +64,22 @@ export class Game {
             case GameCommandType.USE_SAVED_CARD:
                 {
                     let player = this.players.get(this.currentTurnColor)!;
-
-                    player.discardedCards.putCardOnTop(command.data);
-                    player.savedCards.removeFirstCardOfType(command.data);
+                    const card = player.savedCards.removeFirstCardOfType(command.data);
+                    card.action();
                 }
                 break;
             case GameCommandType.USE_DRAWN_CARD:
-                this.players.get(this.currentTurnColor)!
-                    .discardedCards.putCardOnTop(command.data);
-
+                const tempCard = this.currentDrawnCard!;
                 this.currentDrawnCard = undefined;
                 this.changePhase(TurnPhase.postdraw);
+                tempCard.action();
                 break;
+            case GameCommandType.CARD_USED:
+                //we have to generate a brand new version of the card for the discardedPile
+                //otherwise, if we ever restore it, it would have it's old values stored on it
+                this.players.get(this.currentTurnColor)!
+                    .discardedCards.putCardOnTop(CardFactory.getCard(command.data));
+            break;
             case GameCommandType.SAVE_DRAWN_CARD:
                 this.players.get(this.currentTurnColor)!
                     .savedCards.putCardOnTop(command.data);
@@ -115,6 +119,21 @@ export class Game {
     getPositionOfPlayer(color: CounterColor): number {
         return this.players.get(color)!.position;
     }
+
+    getOurPosition(): number {
+        let ourName = this.isHost ? "us" : "them";
+        return Array.from(this.players.values()).find(x => x.name == ourName)!.position;
+    }
+
+    getTheirPosition(): number {
+        let ourName = this.isHost ? "us" : "them";
+        return Array.from(this.players.values()).find(x => x.name != ourName)!.position;
+    }
+
+    isOurTurn(): boolean {
+        let ourName = this.isHost ? "us" : "them";
+        return Array.from(this.players.values()).find(x => x.name == ourName)!.color == this.currentTurnColor;
+      }
 
     restoreCards() {
         if (this.currentDrawnCard?.active) {

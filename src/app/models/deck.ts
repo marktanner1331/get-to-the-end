@@ -16,6 +16,7 @@ export class Deck {
         } else {
             this.cards = CardFactory.cardTypes().map(x => CardFactory.getCard(x));
             this.shuffleArray(this.cards);
+            this.cards.push(CardFactory.getCard(CardType.draw2));
         }
     }
 
@@ -27,9 +28,13 @@ export class Deck {
         this.cards.filter(x => x.active).forEach(x => x.restore());
     }
 
-    removeFirstCardOfType(card: CardType) {
+    getFirstCardOfType(card: CardType): Card {
+        return this.cards.find(x => x.cardType == card)!;
+    }
+
+    removeFirstCardOfType(card: CardType): Card {
         let index = this.cards.findIndex(x => x.cardType == card);
-        this.cards.splice(index, 1);
+        return this.cards.splice(index, 1)[0];
     }
 
     getCard(card: CardType): Card {
@@ -63,7 +68,7 @@ export class Deck {
             return card;
         });
 
-        return new Deck(json.deckTpe, cards);
+        return new Deck(json.deckType, cards);
     }
 
     toJson(): any {
@@ -179,7 +184,6 @@ class ExtraRoll extends Card {
 
         this.restore();
 
-        currentGameService.currentGame.changePhase(TurnPhase.preroll);
         currentGameService.roll();
 
     }
@@ -249,7 +253,6 @@ class Draw2 extends Card {
 
                         _.remove(currentGameService.postProcess, x => x == postCallback);
                         this.player.activeCards.removeFirstCardOfType(CardType.draw2);
-                        currentGameService.suspendEndTurn = false;
                         currentGameService.cardUsed(this.cardType);
                     }
             }
@@ -257,7 +260,6 @@ class Draw2 extends Card {
 
         let currentGameService = AppInjector.get(CurrentGameService);
         currentGameService.postProcess.push(postCallback);
-        currentGameService.suspendEndTurn = true;
     }
 
     action(): void {
@@ -503,6 +505,49 @@ class BrokenTeleporterForOpponent extends Card {
     }
 }
 
+class ResurrectAll extends Card {
+    constructor() {
+        super(CardType.resurrectAll,
+            "Resurrect All",
+            "Move all used cards back to draw deck.");
+    }
+
+    action(): void {
+        let currentGameService = AppInjector.get(CurrentGameService);
+        let player: Player = currentGameService.getCurrentPlayer();
+
+        player.deck.cards = player.discardedCards.cards.concat(player.deck.cards);
+        player.discardedCards.cards = [];
+        currentGameService.cardUsed(this.cardType);
+    }
+
+    restore(): void {
+    }
+}
+
+class SwapPositions extends Card {
+    constructor() {
+        super(CardType.swapPositions,
+            "Swap Positions",
+            "Swaps the positions of the pieces on the board.");
+    }
+
+    action(): void {
+        let currentGameService = AppInjector.get(CurrentGameService);
+
+        let greenPlayerPos = currentGameService.currentGame.players.get(CounterColor.green)!.position;
+        let yellowPlayerPos = currentGameService.currentGame.players.get(CounterColor.yellow)!.position;
+
+        currentGameService.teleportCounter(CounterColor.green, yellowPlayerPos);
+        currentGameService.teleportCounter(CounterColor.yellow, greenPlayerPos);
+
+        currentGameService.cardUsed(this.cardType);
+    }
+
+    restore(): void {
+    }
+}
+
 class MoveUs extends Card {
     constructor(cardType: CardType, title: string, description: string, private amount: number) {
         super(cardType, title, description);
@@ -650,19 +695,9 @@ export class CardFactory {
             case CardType.brokenTeleporterForOpponent:
                 return new BrokenTeleporterForOpponent();
             case CardType.swapPositions:
-                return new TransientCard(
-                    CardType.swapPositions,
-                    "Swap Positions",
-                    "Swaps the positions of the pieces on the board.",
-                    () => this.swapPositions()
-                );
+                return new SwapPositions();
             case CardType.resurrectAll:
-                return new TransientCard(
-                    CardType.resurrectAll,
-                    "Resurrect All",
-                    "Move all used cards back to draw deck.",
-                    () => this.resurrectAll()
-                );
+                return new ResurrectAll();
             default:
                 throw new Error("unknown card: " + CardType[cardType]);
         }
@@ -686,26 +721,6 @@ export class CardFactory {
             "untrap - removes first trap that is triggered",
             "one way only - when placed on a square, we cannot be moved backwards past this point, (except for by teleportation"
         ];
-    }
-
-    private static resurrectAll() {
-        let currentGameService = AppInjector.get(CurrentGameService);
-        let player: Player = currentGameService.getCurrentPlayer();
-
-        player.deck.cards = player.discardedCards.cards.concat(player.deck.cards);
-        currentGameService.cardUsed(CardType.resurrectAll);
-    }
-
-    private static swapPositions() {
-        let currentGameService = AppInjector.get(CurrentGameService);
-
-        let greenPlayerPos = currentGameService.currentGame.players.get(CounterColor.green)!.position;
-        let yellowPlayerPos = currentGameService.currentGame.players.get(CounterColor.yellow)!.position;
-
-        currentGameService.teleportCounter(CounterColor.green, yellowPlayerPos);
-        currentGameService.teleportCounter(CounterColor.yellow, greenPlayerPos);
-
-        currentGameService.cardUsed(CardType.swapPositions);
     }
 
     private static nothing() {

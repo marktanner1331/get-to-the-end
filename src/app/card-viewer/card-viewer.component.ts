@@ -25,13 +25,13 @@ export class CardViewerComponent implements OnInit {
   processCommand(command: GameCommand) {
     switch (command.type) {
       case GameCommandType.CARD_DRAWN:
-        if (this.currentGameService.IsHostsTurn()) {
+        if (this.currentGameService.IsOurTurn()) {
           this.viewCard(command.data);
           this.ourCard = true;
         }
         break;
       case GameCommandType.SHOW_CARD:
-        if (!this.currentGameService.IsHostsTurn()) {
+        if (!this.currentGameService.IsOurTurn()) {
           this.currentGameService.showingDrawnCardAck();
           this.viewCard(command.data);
           this.ourCard = false;
