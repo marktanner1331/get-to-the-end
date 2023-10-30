@@ -1,7 +1,7 @@
 import { AppInjector } from "../app.module";
 import { CurrentGameService } from "../services/current-game.service";
 import * as _ from 'lodash';
-import { CounterColor, flipColor } from "./counter-color";
+import { CounterColor } from "./counter-color";
 import { GameCommand, GameCommandType } from "./game-command";
 import { TurnPhase } from "./TurnPhase";
 import { Player } from "./player";
@@ -491,7 +491,7 @@ class BrokenTeleporterForOpponent extends Card {
         const random: RandomService = AppInjector.get(RandomService);
 
         let location = Math.floor(random.nextRand() * 99);
-        currentGameService.teleportCounter(flipColor(currentGameService.currentGame.currentTurnColor), location);
+        currentGameService.teleportCounter(CounterColor.flipColor(currentGameService.currentGame.currentTurnColor), location);
 
         currentGameService.cardUsed(this.cardType);
     }
@@ -601,7 +601,7 @@ class MoveThem extends Card {
         let player = currentGameService.getCurrentPlayer();
         player.activeCards.putCardOnTop(this);
 
-        currentGameService.moveCounterByAmount(flipColor(currentGameService.currentGame.currentTurnColor), this.amount);
+        currentGameService.moveCounterByAmount(CounterColor.flipColor(currentGameService.currentGame.currentTurnColor), this.amount);
     }
 
     restore(): void {

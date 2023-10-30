@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { Guid } from 'guid-typescript';
 import * as _ from 'lodash';
 import { Subject } from 'rxjs';
 import { AILevel1 } from '../models/AILevel1';
 import { AILevel2 } from '../models/AILevel2';
-import { CounterColor, flipColor } from '../models/counter-color';
+import { CounterColor } from '../models/counter-color';
 import { Card, CardType, Deck, DeckType } from '../models/deck';
 import { Game } from '../models/game';
 import { GameCommand, GameCommandType } from '../models/game-command';
@@ -18,9 +19,7 @@ import { TurnPhase } from '../models/TurnPhase';
 })
 export class CurrentGameService {
   currentGame!: Game;
-  AI: AILevel2 = new AILevel2();
-  remote: Remote = new Remote();
-  saver: Saver = new Saver();
+  controllers: GameController[] = [];
 
   // When the idle counter is at 0, the ui can unfreeze and 
   // receive input from the user
@@ -40,13 +39,13 @@ export class CurrentGameService {
   constructor() { }
 
   startGame() {
-    if (this.currentGame.isRemote) {
-      this.remote.init();
-    } else {
-      this.AI.init();
+    for(const controller of this.controllers) {
+      controller.init();
     }
 
-    this.saver.init();
+    // if (this.currentGame.isRemote) {
+    //   this.remote.init();
+    // }
 
     if (this.currentGame.hasStarted) {
       //i.e. from a saved game
@@ -57,6 +56,36 @@ export class CurrentGameService {
     }
   }
 
+  createNewLocalGame(aiLevel: number, ourColor: CounterColor) {
+    this.currentGame = new Game(Guid.create().toString() + "|" + aiLevel]);
+    this.currentGame.players.set(CounterColor.green, new Player(CounterColor.green, new Deck(DeckType.unused)));
+    this.currentGame.players.set(CounterColor.yellow, new Player(CounterColor.yellow, new Deck(DeckType.unused)));
+    this.currentGame.ourColor = ourColor;
+
+    this.controllers.push(new Saver());
+
+    switch (aiLevel) {
+      case 2:
+        this.controllers.push(new AILevel2());
+        break;
+      default:
+        throw new Error("unknown ai level: " + aiLevel);
+    }
+  }
+
+  toJson():any {
+    const json:any = {};
+    json.game = this.currentGame.toJson();
+    json.controllers = this.controllers.map(x => x.toJson());
+
+    return json;
+  }
+
+  createGameFromJson(json: any) {
+    this.currentGame = Game.fromJson(json.game);
+    this.controllers = (json.controllers as any[]).map(x => GameController.fromJson(x));
+  }
+
   reset() {
     this.idleCounter = 0;
     this.idle = [];
@@ -64,6 +93,7 @@ export class CurrentGameService {
     this.postProcess = [];
     this.commandQueue = [];
     this.isProcessing = false;
+    this.controllers = [];
   }
 
   restore() {
@@ -88,7 +118,7 @@ export class CurrentGameService {
   }
 
   getUs(): Player {
-    return this.currentGame.players.get(this.getOurColor())!;
+    return this.currentGame.players.get(this.currentGame.ourColor)!;
   }
 
   getCurrentPlayer(): Player {
@@ -96,20 +126,19 @@ export class CurrentGameService {
   }
 
   getNonCurrentPlayer(): Player {
-    return this.currentGame.players.get(flipColor(this.currentGame.currentTurnColor))!;
-  }
-
-  getTheirColor(): CounterColor {
-    return flipColor(this.getOurColor());
+    return this.currentGame.players.get(CounterColor.flipColor(this.currentGame.currentTurnColor))!;
   }
 
   getOurColor(): CounterColor {
-    let ourName = this.currentGame.isHost ? "us" : "them";
-    return Array.from(this.currentGame.players.values()).find(x => x.name == ourName)!.color;
+    return this.currentGame.ourColor;
+  }
+
+  getTheirColor(): CounterColor {
+    return CounterColor.flipColor(this.currentGame.ourColor);
   }
 
   IsOurTurn(): boolean {
-    return this.currentGame.currentTurnColor == this.getOurColor();
+    return this.currentGame.currentTurnColor == this.currentGame.ourColor;
   }
 
   moveCounterByAmount(color: CounterColor, amount: number) {
@@ -268,5 +297,23 @@ export class CurrentGameService {
 
   roll() {
     this.pushCommand(new GameCommand(GameCommandType.ROLLING));
+  }
+}
+
+export interface GameController {
+  abstract init():void;
+  abstract toJson():{type: string};
+}
+
+export namespace GameController {
+  export function fromJson(json: {type: string}):GameController {
+    switch (json.type) {
+      case "AI_2":
+        return AILevel2.fromJson(json);
+      case "SAVER":
+        return new Saver();
+      default:
+        throw new Error("unknown game controller type: " + json.type);
+    }
   }
 }

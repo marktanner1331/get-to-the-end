@@ -19,14 +19,14 @@ export class JoinComponent implements OnInit {
     let gameId: string = this.route.snapshot.queryParams["id"];
 
     this.currentGameService.reset();
-    this.currentGameService.currentGame = new Game(gameId);
-    this.currentGameService.currentGame.players.set(CounterColor.green, new Player(CounterColor.green, "us", new Deck(DeckType.unused)));
-    this.currentGameService.currentGame.players.set(CounterColor.yellow, new Player(CounterColor.yellow, "them", new Deck(DeckType.unused)));
+    // this.currentGameService.currentGame = new Game(gameId);
+    // this.currentGameService.currentGame.players.set(CounterColor.green, new Player(CounterColor.green, "us", new Deck(DeckType.unused)));
+    // this.currentGameService.currentGame.players.set(CounterColor.yellow, new Player(CounterColor.yellow, "them", new Deck(DeckType.unused)));
 
-    this.currentGameService.currentGame.isRemote = true;
-    this.currentGameService.currentGame.isHost = false;
-    this.currentGameService.currentGame.hasStarted = true;
+    // this.currentGameService.currentGame.isRemote = true;
+    // this.currentGameService.currentGame.isHost = false;
+    // this.currentGameService.currentGame.hasStarted = true;
 
-    this.router.navigateByUrl("/game");
+    // this.router.navigateByUrl("/game");
   }
 }

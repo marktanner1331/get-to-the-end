@@ -1,0 +1,8 @@
+get saved local games working
+
+saver needs to use the game id better
+    i.e. we store the ai level in the game id
+    so we can display it better on the menu
+    and instead of it returning a list of games, it returns a list of game uri's
+
+figure out peer to peer

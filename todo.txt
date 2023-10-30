@@ -4,12 +4,9 @@ more ai
 
 join link button in game
 
-proper backend
-
 peer to peer connections
 
 PWA
-
-push notifications
+notifications
 
 better styling and animation

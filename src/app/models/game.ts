@@ -2,7 +2,7 @@ import { PACKAGE_ROOT_URL } from "@angular/core";
 import * as _ from "lodash";
 import { AppInjector } from "../app.module";
 import { RandomService } from "../services/random.service";
-import { CounterColor, flipColor } from "./counter-color";
+import { CounterColor } from "./counter-color";
 import { Card, CardFactory, CardType, Deck } from "./deck";
 import { GameCommand, GameCommandType } from "./game-command";
 import { Player } from "./player";
@@ -16,8 +16,7 @@ export class Game {
     currentPhase: TurnPhase = TurnPhase.preroll;
     currentDrawnCard?: Card;
     hasStarted: boolean = false;
-    isHost: boolean = true;
-    isRemote: boolean = false;
+    ourColor: CounterColor = CounterColor.green;
     gameId: string = "";
 
     //used by the remote to keep track of things
@@ -80,7 +79,7 @@ export class Game {
                 this.changePhase(TurnPhase.end);
                 break;
             case GameCommandType.START_TURN:
-                this.currentTurnColor = flipColor(this.currentTurnColor);
+                this.currentTurnColor = CounterColor.flipColor(this.currentTurnColor);
                 this.changePhase(TurnPhase.preroll);
                 break;
         }
@@ -108,18 +107,15 @@ export class Game {
     }
 
     getOurPosition(): number {
-        let ourName = this.isHost ? "us" : "them";
-        return Array.from(this.players.values()).find(x => x.name == ourName)!.position;
+        return this.players.get(this.ourColor)!.position;
     }
 
     getTheirPosition(): number {
-        let ourName = this.isHost ? "us" : "them";
-        return Array.from(this.players.values()).find(x => x.name != ourName)!.position;
+        return this.players.get(CounterColor.flipColor(this.ourColor))!.position;
     }
 
     isOurTurn(): boolean {
-        let ourName = this.isHost ? "us" : "them";
-        return Array.from(this.players.values()).find(x => x.name == ourName)!.color == this.currentTurnColor;
+        return this.ourColor == this.currentTurnColor;
       }
 
     restoreCards() {
@@ -139,10 +135,9 @@ export class Game {
         game.currentTurnColor = json.currentTurnColor;
         game.currentPhase = json.currentPhase;
         game.hasStarted = json.hasStarted;
-        game.isHost = json.isHost;
         game.numUpdates = json.numUpdates;
-        game.isRemote = json.isRemote;
         game.gameId = json.gameId;
+        game.ourColor = json.ourColor;
 
         if (json.currentDrawnCard) {
             game.currentDrawnCard = CardFactory.getCard(json.currentDrawnCard.cardType);
@@ -162,10 +157,9 @@ export class Game {
             currentPhase: this.currentPhase,
             currentDrawnCard: this.currentDrawnCard?.toJson(),
             hasStarted: this.hasStarted,
-            isHost: this.isHost,
             numUpdates: this.numUpdates,
-            isRemote: this.isRemote,
-            gameId: this.gameId
+            gameId: this.gameId,
+            ourColor: this.ourColor
         }
     }
 }

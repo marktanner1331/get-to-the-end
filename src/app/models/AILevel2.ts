@@ -1,13 +1,21 @@
 import { AppInjector } from "../app.module";
-import { CurrentGameService } from "../services/current-game.service";
+import { CurrentGameService, GameController } from "../services/current-game.service";
 import { Card, CardType } from "./deck";
 import { GameCommand, GameCommandType } from "./game-command";
 import { Player } from "./player";
 import { TurnPhase } from "./TurnPhase";
 
-export class AILevel2 {
+export class AILevel2 implements GameController {
     init() {
         AppInjector.get(CurrentGameService).idle.push(() => this.refresh());
+    }
+
+    toJson():{type: string} {
+        return { type: "AI_2" };
+    }
+
+    static fromJson(json: any): GameController {
+        return new AILevel2();
     }
 
     refresh() {
